@@ -10,7 +10,7 @@ A dark fantasy deck-building roguelite played in the browser. The player runs th
 
 ## Tech Stack
 
-- **Vite + TypeScript + Phaser.js** — Phaser handles rendering, input, and scenes
+- **Vite + TypeScript + Phaser.js (v4)** — Phaser handles rendering, input, and scenes
 - **Immer** — immutable state updates with mutable-style API
 - **LocalStorage** for meta-progression persistence (run state is session-only)
 
@@ -50,6 +50,27 @@ Design questions will come up during implementation. Handle them as follows:
 ## Balancing Constants
 
 Magic numbers (energy costs, card rarity weights, Shard drop rates, status effect magnitudes, etc.) must live in constants files, not inline in logic. Flag constants that will need playtesting tuning with a comment.
+
+## Test-Driven Development
+
+**Test runner:** Vitest (not yet configured — set it up before writing the first test).
+
+**Scope:** TDD applies to `src/engine/` and `src/state/` — pure TypeScript with no Phaser dependency. These modules are fully unit-testable. `src/scenes/` is Phaser code; test it manually and visually, not with unit tests.
+
+**Process — red-green-refactor:**
+
+1. **RED** — write a failing test that describes the behavior you want. Run it and confirm it fails for the right reason (feature missing, not a typo or import error).
+2. **GREEN** — write the minimal code to make it pass. Run the test again to confirm.
+3. **REFACTOR** — clean up with tests still green. Don't add new behavior here.
+
+**Enforcement (guided but flexible):**
+
+- For any non-trivial logic in `engine/` or `state/`, start with a failing test. This is the default — do not skip it silently.
+- Exploratory or throwaway code is exempt. If skipping TDD for a piece of code, say so explicitly and explain why.
+- When guiding implementation, always ask: "What test would prove this works?" before discussing how to implement it.
+- Use the `superpowers:test-driven-development` skill for the full process guide.
+
+**Vitest setup reminder:** Before writing any tests, install Vitest and add a `test` script to `package.json`. Config lives in `vite.config.ts` under the `test` key.
 
 ## Misc
 
