@@ -53,24 +53,42 @@ Magic numbers (energy costs, card rarity weights, Shard drop rates, status effec
 
 ## Test-Driven Development
 
-**Test runner:** Vitest (not yet configured — set it up before writing the first test).
+**Test runner:** Vitest — `pnpm test` (watch mode), `pnpm test:run` (single pass).
 
 **Scope:** TDD applies to `src/engine/` and `src/state/` — pure TypeScript with no Phaser dependency. These modules are fully unit-testable. `src/scenes/` is Phaser code; test it manually and visually, not with unit tests.
 
 **Process — red-green-refactor:**
 
-1. **RED** — write a failing test that describes the behavior you want. Run it and confirm it fails for the right reason (feature missing, not a typo or import error).
+1. **RED** — write a failing test describing the behavior you want. Run it and confirm it fails for the right reason (feature missing, not a typo or import error).
 2. **GREEN** — write the minimal code to make it pass. Run the test again to confirm.
 3. **REFACTOR** — clean up with tests still green. Don't add new behavior here.
 
-**Enforcement (guided but flexible):**
+For any non-trivial logic in `engine/` or `state/`, start with a failing test. Skipping TDD is allowed for exploratory or throwaway code, but must be stated explicitly. When guiding implementation, always ask "what test would prove this works?" before discussing how to implement it.
 
-- For any non-trivial logic in `engine/` or `state/`, start with a failing test. This is the default — do not skip it silently.
-- Exploratory or throwaway code is exempt. If skipping TDD for a piece of code, say so explicitly and explain why.
-- When guiding implementation, always ask: "What test would prove this works?" before discussing how to implement it.
-- Use the `superpowers:test-driven-development` skill for the full process guide.
+**Test structure:**
 
-**Vitest setup reminder:** Before writing any tests, install Vitest and add a `test` script to `package.json`. Config lives in `vite.config.ts` under the `test` key.
+- One behavior per test. If the name contains "and", split it.
+- Name tests after the behavior, not the implementation: `"draws all remaining cards when deck is smaller than count"`, not `"splice edge case"`.
+- Co-locate test files with source: `deck.ts` → `deck.test.ts`.
+- Use `describe` to group tests for the same function or module.
+
+**Fixtures and state:**
+
+- Never mutate shared state. Construct a fresh state object per test using spreads: `{ ...gameState, run: { ...gameState.run, deck: [...] } }`.
+- Extract fixture factory functions (e.g. `createMockSkillCard(overrides?)`) when the same shape is repeated across multiple tests. Wait until duplication is felt — don't create helpers preemptively.
+- Keep factories in the test file unless they're needed across multiple test files.
+
+**Assertions:**
+
+- Assert on both sides of a contract. For `drawCards`, check that hand grew *and* deck shrank.
+- Prefer specific assertions over broad ones — `toBe(1)` over `toEqual(entireStateObject)`.
+- Avoid asserting on implementation details. Test what the function returns, not how it does it internally.
+
+**Anti-patterns to avoid:**
+
+- Mutating the `gameState` singleton directly in tests — state bleeds between tests.
+- Nesting `produce` inside a test when the function under test already uses `produce` — just call the function and assert on the returned value.
+- Discarding the return value of pure functions and asserting on the input instead.
 
 ## Misc
 
