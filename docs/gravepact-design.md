@@ -147,26 +147,33 @@ Game logic (deck state, combat engine, meta-progression) lives in pure TypeScrip
 
 **Scene structure:**
 
-| Scene | Purpose |
-| --- | --- |
-| `BootScene` | Asset loading |
-| `HubScene` | Meta-progression, run start |
-| `MapScene` | Node map navigation for the current run |
-| `CombatScene` | Turn-based combat |
-| `RewardScene` | Card selection after combat |
+| Scene         | Purpose                                 |
+| ------------- | --------------------------------------- |
+| `BootScene`   | Asset loading                           |
+| `HubScene`    | Meta-progression, run start             |
+| `MapScene`    | Node map navigation for the current run |
+| `CombatScene` | Turn-based combat                       |
+| `RewardScene` | Card selection after combat             |
 
-**State management:**
+**State shape:**
 
-A single `GameState` object managed via Immer — mutable-style updates that produce immutable snapshots. Two slices:
+`GameState` is `{ run: RunState; meta: MetaState }` — always nested, never flat.
 
-- `RunState` — current run: deck, hand, discard, relics, active auras, health, energy reservation, node map progress
-- `MetaState` — persistent: Orbs, card pool unlocks, passive upgrade purchases, archetypes unlocked
+`RunState` holds: `deck`, `hand`, `discardPile`, `relics`, `activeAuras`, `health`, `maxHealth`, `energyReservation`, and `combatState: CombatState | null`. `MetaState` holds: `orbs`, `unlockedCards`, `purchasedUpgrades`, `unlockedClasses`. Only `MetaState` is persisted to localStorage.
 
-Scenes read from state; they never mutate it directly — all mutations go through dedicated action functions that use Immer's `produce`.
+`CombatState` is non-null only during an active fight. It holds: `enemy` (HP, maxHP, intent, status effects), `energyRemaining`, `energyMax` (base 3 minus current reservation), and `playedThisTurn: Card[]` (the turn buffer used for Support resolution at end-of-turn). When combat ends, `combatState` is set back to `null`.
 
-**Card data:**
+Scenes read from state and never mutate it directly. All mutations go through dedicated action functions in `src/state/actions/`, organized by domain (`combat.ts`, `deck.ts`, `meta.ts`). Actions are pure functions — `(state: GameState, ...args) => GameState` — each calling Immer's `produce` internally and returning the new state. Scenes hold a `gameState` variable and reassign it on each call.
 
-Cards defined as plain TypeScript data objects, not classes. Effects are pure functions referenced by name. This keeps data separate from logic and makes adding new cards straightforward.
+**Card type system:**
+
+`Card` is a discriminated union: `SkillCard | SupportCard | AuraCard | RelicCard`, each with a `kind: "skill" | "support" | "aura" | "relic"` field. The hand is typed as `Card[]`; engine functions narrow on `kind`. Skill tags are a string union: `type SkillTag = "Attack" | "Spell" | "Curse" | "Block" | "Summon"`.
+
+Card effects are stored as `effectId: string` on each card, resolved at runtime via an effect registry in `src/engine/effects.ts`. The registry maps IDs to functions with the signature `(state: GameState, targets: Target[]) => GameState`. This keeps card data files free of logic and makes adding new cards straightforward.
+
+Support cards carry a `compatibleTags: SkillTag[]` field and a `modificationKind` discriminated union covering the four modification types: `scale`, `addEffect`, `changeBehavior`, `reduceCost`.
+
+Cards are defined as plain TypeScript data objects, not classes.
 
 **Persistence:** `localStorage` for meta-progression (`MetaState`). Run state is session-only — runs do not survive browser close (standard for the genre).
 
