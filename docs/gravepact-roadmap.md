@@ -3,44 +3,53 @@
 ## Phase 1 — Foundation
 
 - [x] Project setup: Vite + TypeScript + Phaser.js + Immer
-- [ ] Game state model: `RunState` and `MetaState` types, Immer wiring
-- [ ] Scene skeleton: Boot, Hub, Map, Combat, Reward
-- [ ] Card data model: Skill, Support, Aura, Relic types
-- [ ] Basic combat engine: energy system, hand/deck/discard cycle, turn resolution
-- [ ] First card set: handful of Skills and Supports to test the loop
-- [ ] Enemy model and first location (handful of enemies, telegraphed intents)
-- [ ] Status effect system: Burn, Bleed, Weaken, Armor
-- [ ] Node map generation: branching paths, node types, boss node
-- [ ] Post-combat reward: choose 1 of 3 cards
-- [ ] Functional minimal UI: map, combat display, hand, energy, health
+- [x] ESLint setup
+- [x] Game state types: `GameState`, `RunState`, `MetaState`, `CombatState`, full card discriminated union
+- [x] Effect registry scaffold: `EffectRegistry` type, empty `effects` export in `src/engine/effects.ts`
+- [x] Immer action pattern: `drawCards` action proving the `produce` wiring
+- [ ] Scene skeleton: Boot, Hub, Map, Combat, Reward stubs with scene transitions
+- [ ] Combat actions: `startCombat`, `drawHand`, `playCard` (energy deduction), `endTurn` (discard hand), `endCombat`
+- [ ] Skill resolution: look up `effectId` in registry, call effect function with targets
+- [ ] Support resolution: tag compatibility filter, apply `SupportModification` to skill output
+- [ ] Status effect system: apply/stack Burn, Bleed, Weaken, Armor; per-turn tick logic
+- [ ] Enemy model: enemy data structure, intent cycling, enemy action resolution
+- [ ] First card set: 3–5 skill effects in registry + card data objects, 2–3 supports
+- [ ] First enemy set: 3 enemies with hp, intent cycles, for the first location
+- [ ] Node map generation: branching path structure, node types (combat, elite, shop, rest, boss), boss placement
+- [ ] Post-combat reward: sample 3 cards weighted by rarity, add chosen card to deck
+- [ ] Minimal combat UI: hand display, energy pips, player/enemy health bars, enemy intent, end-turn button
+- [ ] Minimal map UI: node rendering, available path highlighting, node selection
 
 ## Phase 2 — Full Card System
 
-- [ ] Support tag compatibility enforcement
-- [ ] Aura cards: persistent zone, energy reservation
-- [ ] Relic system: relic slot, run-wide passive effects
-- [ ] Card removal at shops
-- [ ] Card rarity (Common / Uncommon / Rare) and rarity-weighted pools
-- [ ] Rest site: heal or upgrade a card
-- [ ] Elite combat: harder fights, better rewards
-- [ ] First full location: complete enemy pool, themed node flavor
+- [ ] Aura play: move aura to persistent zone, apply `energyReservation` to `energyMax`
+- [ ] Aura per-turn effect: tick aura `effectId` at start of each turn
+- [ ] Support orphan prevention: block end-of-turn confirmation if a support has no valid skill
+- [ ] Relic slot: hold up to 4 relics, trigger relic effects at appropriate combat events
+- [ ] Shop node: buy cards, buy relics, optional card removal
+- [ ] Card removal: remove a card from deck permanently (shop mechanic)
+- [ ] Card rarity weights: rarity-weighted pool sampling for rewards and shops
+- [ ] Rest site node: choose to heal or upgrade a card
+- [ ] Card upgrade: each card has an upgraded variant with improved effect
+- [ ] Elite combat: harder enemy with better post-fight reward
+- [ ] First full location: complete enemy pool (6–8 enemies), boss, themed node names
 
 ## Phase 3 — Meta-Progression
 
-- [ ] Orbs: earn during runs, persist on death
-- [ ] Card pool unlock system: spend Orbs to expand the pool
-- [ ] Passive upgrade tree: ~15–20 nodes
-- [ ] Archetype system: starter decks with identity
-- [ ] Second archetype unlock via milestone
-- [ ] Hub screen: start run, spend Orbs, unlock review
-- [ ] LocalStorage persistence for MetaState
+- [ ] Orb earn events: award Orbs for combat clears, elite kills, boss kill
+- [ ] LocalStorage persistence: save/load `MetaState` on run end and hub entry
+- [ ] Card pool unlock: spend Orbs to add cards to the general pool
+- [ ] Passive upgrade tree: 15–20 nodes with small run-wide bonuses
+- [ ] Archetype system: starter deck definitions, archetype selection at run start
+- [ ] Second archetype: unlock via milestone (e.g. first boss kill)
+- [ ] Hub scene: start run, spend Orbs, view unlocks — three distinct screens
 
 ## Phase 4 — UI Design & Polish
 
-- [ ] UI design session: visual language, combat feedback, card presentation
+- [ ] UI design session: visual language, card presentation, combat feedback
 - [ ] UI implementation based on design
-- [ ] Location theming: distinct palettes and enemy flavor per location
-- [ ] Second location
+- [ ] Location theming: distinct palette and node flavor per location
+- [ ] Second location: new enemy pool, boss, themed map
 - [ ] Animated card play and status effect feedback
 - [ ] Sound design pass
 
