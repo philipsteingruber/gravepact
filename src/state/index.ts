@@ -1,4 +1,4 @@
-import type { GameState } from "../lib/types";
+import type { GameState } from "@/lib/types";
 import { initialMetaState } from "./meta-state";
 import { initialRunState } from "./run-state";
 

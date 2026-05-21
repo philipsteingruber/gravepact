@@ -1,4 +1,4 @@
-import type { MetaState } from "../lib/types";
+import type { MetaState } from "@/lib/types";
 
 export const initialMetaState = {
   orbs: 0,

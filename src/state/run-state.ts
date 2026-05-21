@@ -1,5 +1,5 @@
-import { BASE_MAX_HEALTH } from "../lib/constants";
-import type { RunState } from "../lib/types";
+import { BASE_MAX_HEALTH } from "@/lib/constants";
+import type { RunState } from "@/lib/types";
 
 export const initialRunState = {
   deck: [],

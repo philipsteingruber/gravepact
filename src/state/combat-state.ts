@@ -1,5 +1,5 @@
-import { BASE_MAX_ENERGY } from "../lib/constants";
-import type { CombatState } from "../lib/types";
+import { BASE_MAX_ENERGY } from "@/lib/constants";
+import type { CombatState } from "@/lib/types";
 
 export const initialCombatState = {
   enemy: undefined,

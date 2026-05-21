@@ -1,5 +1,5 @@
+import type { GameState } from "@/lib/types";
 import { produce } from "immer";
-import type { GameState } from "../../lib/types";
 
 export const drawCards = (state: GameState, count: number): GameState => {
   return produce(state, (draft) => {
