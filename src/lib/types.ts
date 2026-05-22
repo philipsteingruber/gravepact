@@ -74,4 +74,6 @@ export type MetaState = {
   purchasedUpgrades: Upgrade[];
   unlockedClasses: CharacterClass[];
 };
-export type GameState = { run: RunState; meta: MetaState };
+
+export type GameState = { meta: MetaState; run: RunState };
+export type Store = { gameState: GameState };

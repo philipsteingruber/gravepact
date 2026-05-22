@@ -163,7 +163,23 @@ Game logic (deck state, combat engine, meta-progression) lives in pure TypeScrip
 
 `CombatState` is non-null only during an active fight. It holds: `enemy` (HP, maxHP, intent, status effects), `energyRemaining`, `energyMax` (base 3 minus current reservation), and `playedThisTurn: Card[]` (the turn buffer used for Support resolution at end-of-turn). When combat ends, `combatState` is set back to `null`.
 
-Scenes read from state and never mutate it directly. All mutations go through dedicated action functions in `src/state/actions/`, organized by domain (`combat.ts`, `deck.ts`, `meta.ts`). Actions are pure functions — `(state: GameState, ...args) => GameState` — each calling Immer's `produce` internally and returning the new state. Scenes hold a `gameState` variable and reassign it on each call.
+Scenes read from state and never mutate it directly. All mutations go through dedicated action functions in `src/state/actions/`, organized by domain (`combat.ts`, `deck.ts`, `meta.ts`). Actions are pure functions — `(state: GameState, ...args) => GameState` — each calling Immer's `produce` internally and returning the new state.
+
+**State store:**
+
+Game state is held in a single mutable container exported from `src/state/store.ts`:
+
+```ts
+export const store = { gameState: createInitialState() };
+```
+
+Scenes import `store` and reassign `store.gameState` after each action:
+
+```ts
+store.gameState = someAction(store.gameState, ...args);
+```
+
+Actions remain pure functions with no dependency on the store itself. The store is the only place state is held; there is no per-scene copy.
 
 **Card type system:**
 

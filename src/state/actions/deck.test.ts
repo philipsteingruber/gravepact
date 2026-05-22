@@ -1,5 +1,5 @@
 import type { Card } from "@/lib/types";
-import { gameState } from "..";
+import { store } from "../store";
 import { drawCards } from "./deck";
 
 const createMockSkillCard = (overrides?: Omit<Partial<Card>, "kind">): Card => {
@@ -20,7 +20,7 @@ describe("deckActions", () => {
   it("should move cards from deck to hand", () => {
     const mockCard = createMockSkillCard();
 
-    const state = { ...gameState, run: { ...gameState.run, deck: [mockCard, mockCard, mockCard] } };
+    const state = { ...store.gameState, run: { ...store.gameState.run, deck: [mockCard, mockCard, mockCard] } };
     const result = drawCards(state, 1);
 
     expect(result.run.hand.length).toBe(1);
@@ -30,7 +30,7 @@ describe("deckActions", () => {
   it("should handle draw count greater than deck size", () => {
     const mockCard = createMockSkillCard();
 
-    const state = { ...gameState, run: { ...gameState.run, deck: [mockCard] } };
+    const state = { ...store.gameState, run: { ...store.gameState.run, deck: [mockCard] } };
     const result = drawCards(state, 2);
 
     expect(result.run.hand.length).toBe(1);
@@ -38,7 +38,7 @@ describe("deckActions", () => {
   });
 
   it("should leave state unchanged when drawing from an empty deck", () => {
-    const state = { ...gameState, run: { ...gameState.run } };
+    const state = { ...store.gameState, run: { ...store.gameState.run } };
     const result = drawCards(state, 1);
 
     expect(result.run.hand.length).toBe(0);
@@ -48,7 +48,7 @@ describe("deckActions", () => {
   it("should leave state unchanged when drawing 0 cards", () => {
     const mockCard = createMockSkillCard();
 
-    const state = { ...gameState, run: { ...gameState.run, deck: [mockCard] } };
+    const state = { ...store.gameState, run: { ...store.gameState.run, deck: [mockCard] } };
     const result = drawCards(state, 0);
 
     expect(result.run.hand.length).toBe(0);
