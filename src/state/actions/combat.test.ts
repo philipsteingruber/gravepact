@@ -1,11 +1,11 @@
 import { effects } from "@/engine/effects";
 import { BASE_MAX_ENERGY } from "@/lib/constants";
 import { createMockAuraCard, createMockSkillCard, createMockSupportCard } from "@/lib/test-helpers";
-import type { Enemy, GameState, Target } from "@/lib/types";
+import type { Enemy, GameState, SkillOutput, Target } from "@/lib/types";
 import { produce } from "immer";
 import { initialCombatState } from "../combat-state";
 import { store } from "../store";
-import { commitHand, drawHand, endCombat, endTurn, playCard, startCombat } from "./combat";
+import { applySkillOutput, commitHand, drawHand, endCombat, endTurn, playCard, startCombat } from "./combat";
 
 describe("combatActions", () => {
   describe("startCombat", () => {
@@ -97,7 +97,7 @@ describe("combatActions", () => {
         draft.run.combat = { ...initialCombatState };
         draft.run.combat.stagedCards = [mockCard];
       });
-      effects["test"] = (state, _targets) => state;
+      effects["test"] = (_state, targets) => ({ damage: 10, statuses: [], targets }) satisfies SkillOutput;
 
       state = commitHand(state);
 
@@ -112,7 +112,7 @@ describe("combatActions", () => {
         draft.run.combat.stagedCards = [mockCard];
         draft.run.discardPile = [mockCard];
       });
-      effects["test"] = (state, _targets) => state;
+      effects["test"] = (_state, targets) => ({ damage: 10, statuses: [], targets }) satisfies SkillOutput;
 
       state = commitHand(state);
 
@@ -126,16 +126,8 @@ describe("combatActions", () => {
         effectId: "test",
       });
 
-      effects["test"] = (state: GameState, targets: Target[]) => {
-        return produce(state, (draft) => {
-          if (!draft.run.combat || !draft.run.combat.enemy) return state;
-          targets.map((target) => {
-            if (target.enemyId === draft.run.combat!.enemy!.id) {
-              draft.run.combat!.enemy!.hp -= 5;
-            }
-          });
-        });
-      };
+      effects["test"] = (_state: GameState, targets: Target[]) =>
+        ({ damage: 5, statuses: [], targets }) satisfies SkillOutput;
 
       let state = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState };
@@ -185,6 +177,28 @@ describe("combatActions", () => {
       });
 
       expect(() => commitHand(originalState)).toThrow();
+    });
+
+    it("applies compatible support modifications when commiting a skill", () => {
+      effects["test"] = (_state, targets) => ({ damage: 10, statuses: [], targets }) satisfies SkillOutput;
+
+      const mockSkillCard = createMockSkillCard({ tags: ["Attack"], target: { kind: "enemy", enemyId: "test" } });
+      const mockSupportCard = createMockSupportCard({
+        compatibleTags: ["Attack"],
+        effect: { kind: "multiplicative", multiplier: 1.5 },
+      });
+
+      const state = commitHand(
+        produce({ ...store.gameState }, (draft) => {
+          draft.run.combat = {
+            ...initialCombatState,
+            enemy: { hp: 20, maxHp: 20, id: "test", intent: { kind: "attack", damage: 5 }, name: "test", statuses: [] },
+          };
+          draft.run.combat.stagedCards = [mockSkillCard, mockSupportCard];
+        }),
+      );
+
+      expect(state.run.combat!.enemy!.hp).toBe(5);
     });
   });
 
@@ -254,6 +268,26 @@ describe("combatActions", () => {
       state = endCombat(state);
 
       expect(state.run.combat).toBe(null);
+    });
+  });
+
+  describe("applySkillOutput", () => {
+    it("should correctly reduce hp by the damage value", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = { ...initialCombatState };
+        draft.run.combat.enemy = {
+          hp: 10,
+          maxHp: 10,
+          id: "test-enemy",
+          intent: { kind: "attack", damage: 5 },
+        } as Enemy;
+      });
+
+      const skillOutput: SkillOutput = { damage: 5, statuses: [], targets: [{ enemyId: "test-enemy", kind: "enemy" }] };
+
+      state = applySkillOutput(state, skillOutput);
+
+      expect(state.run.combat!.enemy?.hp).toBe(5);
     });
   });
 });

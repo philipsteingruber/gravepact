@@ -10,7 +10,7 @@
 - [x] Scene skeleton: Boot, Hub, Map, Combat, Reward stubs with scene transitions
 - [x] Combat actions: `startCombat`, `drawHand`, `playCard` (energy deduction), `endTurn` (discard hand), `endCombat`
 - [x] Skill resolution: look up `effectId` in registry, call effect function with targets
-- [ ] Support resolution: tag compatibility filter, apply `SupportModification` to skill output
+- [x] Support resolution: tag compatibility filter, apply `multiplicative` and `additive` modifications to skill output (`changeBehavior` and `reduceCost` deferred)
 - [ ] Status effect system: apply/stack Burn, Bleed, Weaken, Armor; per-turn tick logic
 - [ ] Enemy model: enemy data structure, intent cycling, enemy action resolution
 - [ ] First card set: 3–5 skill effects in registry + card data objects, 2–3 supports
@@ -22,6 +22,8 @@
 
 ## Phase 2 — Full Card System
 
+- [ ] Support `changeBehavior`: multi-target skill modification (requires multi-enemy model)
+- [ ] Support `reduceCost`: reduce next skill's energy cost (requires inter-turn cost tracking)
 - [ ] Aura play: move aura to persistent zone, apply `energyReservation` to `energyMax`
 - [ ] Aura per-turn effect: tick aura `effectId` at start of each turn
 - [ ] Support orphan prevention: block end-of-turn confirmation if a support has no valid skill

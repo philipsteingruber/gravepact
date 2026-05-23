@@ -1,6 +1,7 @@
 import { effects } from "@/engine/effects";
+import { filterCompatibleMods, resolveSupports } from "@/engine/supports";
 import { BASE_HAND_SIZE } from "@/lib/constants";
-import type { Card, Enemy, GameState } from "@/lib/types";
+import type { Card, Enemy, GameState, SkillOutput, SupportCard } from "@/lib/types";
 import { produce } from "immer";
 import { initialCombatState } from "../combat-state";
 import { drawCards } from "./deck";
@@ -58,7 +59,16 @@ export const commitHand = (state: GameState) => {
     const effect = effects[skillCard.effectId];
     if (!effect) throw new Error(`Unregistered effectId: ${skillCard.effectId}`);
 
-    if (state.run.combat.enemy) state = effect(state, [skillCard.target]);
+    if (state.run.combat.enemy) {
+      const mods = filterCompatibleMods({
+        skill: skillCard,
+        supports: state.run.combat!.stagedCards.filter((card) => card !== skillCard) as SupportCard[],
+      });
+      const skillOutput = effect(state, [skillCard.target]);
+
+      const modifiedSkillOutput = resolveSupports({ output: skillOutput, mods });
+      state = applySkillOutput(state, modifiedSkillOutput);
+    }
   } else if (state.run.combat.stagedCards.some((card) => card.kind === "aura")) {
     // TODO: Resolve aura cards (Phase 2)
     return state;
@@ -85,5 +95,16 @@ export const endTurn = (state: GameState) => {
 export const endCombat = (state: GameState) => {
   return produce(state, (draft) => {
     draft.run.combat = null;
+  });
+};
+
+export const applySkillOutput = (state: GameState, output: SkillOutput): GameState => {
+  if (!state.run.combat || !state.run.combat.enemy) return state;
+
+  return produce(state, (draft) => {
+    output.targets.forEach((target) => {
+      if (target.enemyId === draft.run.combat!.enemy!.id)
+        draft.run.combat!.enemy!.hp = Math.max(0, draft.run.combat!.enemy!.hp - output.damage);
+    });
   });
 };

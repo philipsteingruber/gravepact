@@ -77,3 +77,5 @@ export type MetaState = {
 
 export type GameState = { meta: MetaState; run: RunState };
 export type Store = { gameState: GameState };
+
+export type SkillOutput = { damage: number; statuses: StatusEffect[]; targets: Target[] };
