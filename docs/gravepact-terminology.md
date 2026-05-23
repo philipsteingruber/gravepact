@@ -38,6 +38,25 @@ A Skill may have more than one tag (e.g. *Attack/Spell*). Supports match any of 
 
 ## Combat Terms
 
+**Combo**
+The set of cards a player stages before clicking Play Hand. A valid combo contains exactly one Skill or one Aura, plus any number of Supports. Supports cannot form a combo alone. Multiple combos can be played in a single turn as long as the player has energy.
+
+**Staging Area**
+The pending zone where selected cards wait before a combo is committed. Cards move here when the player clicks them; the area clears after each Play Hand action. In code: `stagedCards`.
+
+**Play Hand**
+The player action that commits the current combo and triggers resolution — skill effect fires, supports modify it, all staged cards move to discard.
+
+**Support Modification Types**
+The four ways a Support can alter a Skill's output:
+
+| Type | Effect |
+| --- | --- |
+| **scale** (multiplicative) | Multiplies the skill's damage output |
+| **addEffect** (additive) | Appends a status effect to the skill's output |
+| **changeBehavior** | Changes which targets are hit (e.g. hit all enemies) — deferred until multi-enemy model is in place |
+| **reduceCost** | Reduces the energy cost of the next skill played — deferred until inter-turn cost tracking is in place |
+
 **Energy**
 The per-turn resource spent to play cards. Base value: 3 per turn.
 

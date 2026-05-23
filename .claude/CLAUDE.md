@@ -5,7 +5,7 @@ A dark fantasy deck-building roguelite played in the browser. The player runs th
 ## Key Documents
 
 - **Design doc:** `docs/gravepact-design.md` — full specification for all game systems: core loop, combat, card types, meta-progression, and architecture. Read the relevant section before making any implementation decision.
-- **Terminology:** `docs/gravepact-terminology.md` — living glossary of all game terms. Use the language defined here consistently in code and conversation. Update it as terms are added, changed, or clarified.
+- **Terminology:** `docs/gravepact-terminology.md` — living glossary of all game terms. Use the language defined here consistently in code and conversation. Update it as terms are added, changed, or clarified. When the user uses different language than the current terminology, treat it as a naming decision and update the document to match — do not correct the user.
 - **Roadmap:** `docs/gravepact-roadmap.md` — phased implementation plan with checkboxes. Check this to understand what's in scope for the current phase and what's deferred.
 
 ## Tech Stack
