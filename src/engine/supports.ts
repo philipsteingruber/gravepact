@@ -19,13 +19,13 @@ export const filterCompatibleMods = ({
 };
 
 export const resolveSupports = ({
-  output,
+  skillOutput,
   mods,
 }: {
-  output: SkillOutput;
+  skillOutput: SkillOutput;
   mods: SupportModification[];
 }): SkillOutput => {
-  const result = { ...output };
+  const result = { ...skillOutput };
 
   mods.forEach((mod) => {
     if (mod.kind === "multiplicative") {

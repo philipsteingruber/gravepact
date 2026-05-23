@@ -8,8 +8,7 @@ import { drawCards } from "./deck";
 
 export const startCombat = (state: GameState, enemy: Enemy) => {
   return produce(state, (draft) => {
-    draft.run.combat = { ...initialCombatState };
-    draft.run.combat.enemy = enemy;
+    draft.run.combat = { ...initialCombatState, enemy };
   });
 };
 
@@ -59,16 +58,14 @@ export const commitHand = (state: GameState) => {
     const effect = effects[skillCard.effectId];
     if (!effect) throw new Error(`Unregistered effectId: ${skillCard.effectId}`);
 
-    if (state.run.combat.enemy) {
-      const mods = filterCompatibleMods({
-        skill: skillCard,
-        supports: state.run.combat!.stagedCards.filter((card) => card !== skillCard) as SupportCard[],
-      });
-      const skillOutput = effect(state, [skillCard.target]);
+    const mods = filterCompatibleMods({
+      skill: skillCard,
+      supports: state.run.combat!.stagedCards.filter((card) => card !== skillCard) as SupportCard[],
+    });
+    const skillOutput = effect(state, [skillCard.target]);
 
-      const modifiedSkillOutput = resolveSupports({ output: skillOutput, mods });
-      state = applySkillOutput(state, modifiedSkillOutput);
-    }
+    const modifiedSkillOutput = resolveSupports({ skillOutput, mods });
+    state = applySkillOutput(state, modifiedSkillOutput);
   } else if (state.run.combat.stagedCards.some((card) => card.kind === "aura")) {
     // TODO: Resolve aura cards (Phase 2)
     return state;
@@ -98,13 +95,13 @@ export const endCombat = (state: GameState) => {
   });
 };
 
-export const applySkillOutput = (state: GameState, output: SkillOutput): GameState => {
-  if (!state.run.combat || !state.run.combat.enemy) return state;
+export const applySkillOutput = (state: GameState, skillOutput: SkillOutput): GameState => {
+  if (!state.run.combat) return state;
 
   return produce(state, (draft) => {
-    output.targets.forEach((target) => {
-      if (target.enemyId === draft.run.combat!.enemy!.id)
-        draft.run.combat!.enemy!.hp = Math.max(0, draft.run.combat!.enemy!.hp - output.damage);
+    skillOutput.targets.forEach((target) => {
+      if (target.enemyId === draft.run.combat!.enemy.id)
+        draft.run.combat!.enemy.hp = Math.max(0, draft.run.combat!.enemy.hp - skillOutput.damage);
     });
   });
 };

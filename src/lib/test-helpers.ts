@@ -1,4 +1,16 @@
-import type { AuraCard, Card, SkillCard, SupportCard } from "./types";
+import type { AuraCard, Card, Enemy, SkillCard, SupportCard } from "./types";
+
+export const createMockEnemy = (overrides?: Partial<Enemy>): Enemy => {
+  return {
+    id: "mock_enemy",
+    name: "Mock Enemy",
+    hp: 20,
+    maxHp: 20,
+    intent: { kind: "attack", damage: 5 },
+    statuses: [],
+    ...overrides,
+  };
+};
 
 export const createMockSkillCard = (overrides?: Partial<SkillCard>): Card => {
   return {

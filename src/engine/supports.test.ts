@@ -24,7 +24,7 @@ describe("supports", () => {
       const skillOutput: SkillOutput = { damage: 10, statuses: [], targets: [{ kind: "enemy", enemyId: "" }] };
       const mod: SupportModification = { kind: "multiplicative", multiplier: 1.5 };
 
-      const result = resolveSupports({ output: skillOutput, mods: [mod] });
+      const result = resolveSupports({ skillOutput, mods: [mod] });
 
       expect(result.damage).toBe(15);
     });
@@ -33,7 +33,7 @@ describe("supports", () => {
       const skillOutput: SkillOutput = { damage: 10, statuses: [], targets: [{ kind: "enemy", enemyId: "" }] };
       const mod: SupportModification = { kind: "additive", statusEffect: "Bleed", stacks: 1 };
 
-      const result = resolveSupports({ output: skillOutput, mods: [mod] });
+      const result = resolveSupports({ skillOutput, mods: [mod] });
 
       expect(result.statuses[0].kind).toEqual("Bleed");
       expect(result.statuses[0].stacks).toBe(1);
