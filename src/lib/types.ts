@@ -1,7 +1,7 @@
 export type SkillTag = "Attack" | "Spell" | "Curse" | "Block" | "Summon";
 export type CardRarity = "Common" | "Uncommon" | "Rare";
 
-export type Target = { kind: "enemy" };
+export type Target = { kind: "enemy"; enemyId: string };
 
 export type StatusEffectKind = "Bleed" | "Weaken" | "Burn" | "Armor";
 export type StatusEffect = { kind: StatusEffectKind; stacks: number };

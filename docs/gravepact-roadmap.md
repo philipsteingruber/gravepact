@@ -9,7 +9,7 @@
 - [x] Immer action pattern: `drawCards` action proving the `produce` wiring
 - [x] Scene skeleton: Boot, Hub, Map, Combat, Reward stubs with scene transitions
 - [x] Combat actions: `startCombat`, `drawHand`, `playCard` (energy deduction), `endTurn` (discard hand), `endCombat`
-- [ ] Skill resolution: look up `effectId` in registry, call effect function with targets
+- [x] Skill resolution: look up `effectId` in registry, call effect function with targets
 - [ ] Support resolution: tag compatibility filter, apply `SupportModification` to skill output
 - [ ] Status effect system: apply/stack Burn, Bleed, Weaken, Armor; per-turn tick logic
 - [ ] Enemy model: enemy data structure, intent cycling, enemy action resolution

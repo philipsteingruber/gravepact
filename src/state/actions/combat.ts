@@ -1,3 +1,4 @@
+import { effects } from "@/engine/effects";
 import { BASE_HAND_SIZE } from "@/lib/constants";
 import type { Card, Enemy, GameState } from "@/lib/types";
 import { produce } from "immer";
@@ -45,7 +46,24 @@ export const playCard = (state: GameState, card: Card) => {
 };
 
 export const commitHand = (state: GameState) => {
-  if (!state.run.combat) return state;
+  if (
+    !state.run.combat ||
+    state.run.combat.stagedCards.filter((card) => card.kind === "aura" || card.kind === "skill").length !== 1
+  )
+    return state;
+
+  if (state.run.combat.stagedCards.some((card) => card.kind === "skill")) {
+    const skillCard = state.run.combat.stagedCards.find((card) => card.kind === "skill")!;
+
+    const effect = effects[skillCard.effectId];
+    if (!effect) throw new Error(`Unregistered effectId: ${skillCard.effectId}`);
+
+    if (state.run.combat.enemy) state = effect(state, [skillCard.target]);
+  } else if (state.run.combat.stagedCards.some((card) => card.kind === "aura")) {
+    // TODO: Resolve aura cards (Phase 2)
+    return state;
+  }
+
   return produce(state, (draft) => {
     draft.run.discardPile.push(...draft.run.combat!.stagedCards);
     draft.run.combat!.stagedCards = [];

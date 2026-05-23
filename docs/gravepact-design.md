@@ -176,7 +176,7 @@ Scenes read from state and never mutate it directly. All mutations go through de
 - `startCombat(state, enemy)` — initializes a fresh `CombatState`; scene calls `drawHand` after
 - `drawHand(state)` — draws up to 5 cards; auto-reshuffles discard into deck mid-draw if needed
 - `playCard(state, cardId)` — moves card from hand to `stagedCards`, deducts `energyCost` from `energyRemaining`
-- `commitHand(state)` — resolves the staged bundle (skill + compatible supports, or aura), moves all staged cards to discard, clears `stagedCards`
+- `commitHand(state)` — validates and resolves the staged bundle. A valid bundle requires exactly one skill or one aura card. If neither is present, returns state unchanged (no-op). If only an aura is staged, also a no-op until Phase 2 aura resolution is implemented. If a skill is staged, looks up `effectId` in the effect registry and calls the effect function with the current enemy as target; if `effectId` is not registered, throws — this is always a developer error. After resolution, moves all staged cards to discard and clears `stagedCards`.
 - `endTurn(state)` — discards remaining hand, resets `energyRemaining`, calls `drawHand`; scene calls `resolveEnemyTurn` after
 - `endCombat(state)` — sets `run.combat` to `null`
 
@@ -201,6 +201,8 @@ Actions remain pure functions with no dependency on the store itself. The store 
 `Card` is a discriminated union: `SkillCard | SupportCard | AuraCard | RelicCard`, each with a `kind: "skill" | "support" | "aura" | "relic"` field. The hand is typed as `Card[]`; engine functions narrow on `kind`. Skill tags are a string union: `type SkillTag = "Attack" | "Spell" | "Curse" | "Block" | "Summon"`.
 
 Card effects are stored as `effectId: string` on each card, resolved at runtime via an effect registry in `src/engine/effects.ts`. The registry maps IDs to functions with the signature `(state: GameState, targets: Target[]) => GameState`. This keeps card data files free of logic and makes adding new cards straightforward.
+
+`Target` is `{ kind: "enemy"; enemyId: string }` — the `enemyId` field identifies which enemy is targeted, preparing for future multi-enemy combat. Effects that target all enemies (via a `changeBehavior` support) will receive the full list of active enemy IDs. The effect function signature will be extended to `(state, targets, modifications: SupportModification[]) => GameState` when support resolution is implemented.
 
 Support cards carry a `compatibleTags: SkillTag[]` field and a `modificationKind` discriminated union covering the four modification types: `scale`, `addEffect`, `changeBehavior`, `reduceCost`.
 
