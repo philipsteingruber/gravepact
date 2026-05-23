@@ -5,5 +5,5 @@ export const initialCombatState = {
   enemy: undefined,
   energyRemaining: BASE_MAX_ENERGY,
   energyMax: BASE_MAX_ENERGY,
-  playedThisTurn: [],
+  stagedCards: [],
 } satisfies CombatState;

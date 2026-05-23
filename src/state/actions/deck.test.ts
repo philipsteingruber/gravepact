@@ -1,20 +1,6 @@
-import type { Card } from "@/lib/types";
+import { createMockSkillCard } from "@/lib/test-helpers";
 import { store } from "../store";
 import { drawCards } from "./deck";
-
-const createMockSkillCard = (overrides?: Omit<Partial<Card>, "kind">): Card => {
-  return {
-    kind: "skill",
-    effectId: "test",
-    energyCost: 1,
-    tags: [],
-    id: "mock_card",
-    name: "Mock Card",
-    rarity: "Common",
-    target: { kind: "enemy" },
-    ...overrides,
-  };
-};
 
 describe("deckActions", () => {
   it("should move cards from deck to hand", () => {

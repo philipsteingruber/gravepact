@@ -54,7 +54,7 @@ export type CombatState = {
   enemy?: Enemy;
   energyRemaining: number;
   energyMax: number;
-  playedThisTurn: Card[];
+  stagedCards: Card[];
 };
 export type RunState = {
   deck: Card[];

@@ -33,7 +33,13 @@ A persistent hub — dark, liminal, atmospheric — is where meta-progression li
 
 **Turn structure:**
 
-Each turn begins with **3 energy** (base) and drawing up to a **hand of 5 cards**. Spend energy to play cards, then end your turn. Enemies act, a new turn begins.
+Each turn begins with **3 energy** (base) and drawing up to a **hand of 5 cards**. On their turn the player stages cards by clicking them — selected cards move visually to a pending zone. When ready, they click **Play Hand** to commit and resolve that bundle (see below). A turn can contain multiple Play Hand actions as long as the player has energy and cards. When done, the player clicks **End Turn** — enemies act, a new turn begins.
+
+**Bundle resolution:**
+
+A bundle is the set of cards a player stages before clicking Play Hand. A valid bundle contains exactly one skill or one aura, plus any number of supports. Supports cannot form a bundle alone.
+
+On Play Hand: the skill's effect fires via the registry, modified by any compatible supports in the bundle. Supports with no matching skill in the bundle are moved to discard with no effect. Aura path: the aura moves to the persistent zone and reduces `energyMax` by its reservation. All bundled cards then move to the discard pile and the staging area clears.
 
 **Support interaction:**
 
@@ -161,9 +167,18 @@ Game logic (deck state, combat engine, meta-progression) lives in pure TypeScrip
 
 `RunState` holds: `deck`, `hand`, `discardPile`, `relics`, `activeAuras`, `health`, `maxHealth`, `energyReservation`, and `combatState: CombatState | null`. `MetaState` holds: `orbs`, `unlockedCards`, `purchasedUpgrades`, `unlockedClasses`. Only `MetaState` is persisted to localStorage.
 
-`CombatState` is non-null only during an active fight. It holds: `enemy` (HP, maxHP, intent, status effects), `energyRemaining`, `energyMax` (base 3 minus current reservation), and `playedThisTurn: Card[]` (the turn buffer used for Support resolution at end-of-turn). When combat ends, `combatState` is set back to `null`.
+`CombatState` is non-null only during an active fight. It holds: `enemy` (HP, maxHP, intent, status effects), `energyRemaining`, `energyMax` (base 3 minus current reservation), and `stagedCards: Card[]` (the cards the player has clicked but not yet committed — cleared on each Play Hand). When combat ends, `combatState` is set back to `null`.
 
 Scenes read from state and never mutate it directly. All mutations go through dedicated action functions in `src/state/actions/`, organized by domain (`combat.ts`, `deck.ts`, `meta.ts`). Actions are pure functions — `(state: GameState, ...args) => GameState` — each calling Immer's `produce` internally and returning the new state.
+
+**Combat actions** (`src/state/actions/combat.ts`):
+
+- `startCombat(state, enemy)` — initializes a fresh `CombatState`; scene calls `drawHand` after
+- `drawHand(state)` — draws up to 5 cards; auto-reshuffles discard into deck mid-draw if needed
+- `playCard(state, cardId)` — moves card from hand to `stagedCards`, deducts `energyCost` from `energyRemaining`
+- `commitHand(state)` — resolves the staged bundle (skill + compatible supports, or aura), moves all staged cards to discard, clears `stagedCards`
+- `endTurn(state)` — discards remaining hand, resets `energyRemaining`, calls `drawHand`; scene calls `resolveEnemyTurn` after
+- `endCombat(state)` — sets `run.combat` to `null`
 
 **State store:**
 
