@@ -3,7 +3,7 @@ import { store } from "../store";
 import { drawCards } from "./deck";
 
 describe("deckActions", () => {
-  it("should move cards from deck to hand", () => {
+  it("moves cards from deck to hand", () => {
     const mockCard = createMockSkillCard();
 
     const state = { ...store.gameState, run: { ...store.gameState.run, deck: [mockCard, mockCard, mockCard] } };
@@ -13,7 +13,7 @@ describe("deckActions", () => {
     expect(result.run.deck.length).toBe(2);
   });
 
-  it("should handle draw count greater than deck size", () => {
+  it("handles draw count greater than deck size", () => {
     const mockCard = createMockSkillCard();
 
     const state = { ...store.gameState, run: { ...store.gameState.run, deck: [mockCard] } };
@@ -23,7 +23,7 @@ describe("deckActions", () => {
     expect(result.run.deck.length).toBe(0);
   });
 
-  it("should leave state unchanged when drawing from an empty deck", () => {
+  it("leaves state unchanged when drawing from an empty deck", () => {
     const state = { ...store.gameState, run: { ...store.gameState.run } };
     const result = drawCards(state, 1);
 
@@ -31,7 +31,7 @@ describe("deckActions", () => {
     expect(result.run.deck.length).toBe(0);
   });
 
-  it("should leave state unchanged when drawing 0 cards", () => {
+  it("leaves state unchanged when drawing 0 cards", () => {
     const mockCard = createMockSkillCard();
 
     const state = { ...store.gameState, run: { ...store.gameState.run, deck: [mockCard] } };

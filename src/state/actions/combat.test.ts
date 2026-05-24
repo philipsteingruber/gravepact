@@ -9,7 +9,7 @@ import { applySkillOutput, commitHand, drawHand, endCombat, endTurn, playCard, s
 
 describe("combatActions", () => {
   describe("startCombat", () => {
-    it("should initialize a fresh CombatState", () => {
+    it("initializes a fresh CombatState", () => {
       let state = produce(store.gameState, (draft) => {
         draft.run.reservedEnergy = 0;
       });
@@ -32,7 +32,7 @@ describe("combatActions", () => {
   });
 
   describe("drawHand", () => {
-    it("should move HAND_SIZE cards from deck to hand", () => {
+    it("moves HAND_SIZE cards from deck to hand", () => {
       const mockCard = createMockSkillCard();
       let state = produce(store.gameState, (draft) => {
         draft.run.deck = [mockCard, mockCard, mockCard, mockCard, mockCard, mockCard, mockCard];
@@ -44,7 +44,7 @@ describe("combatActions", () => {
       expect(state.run.hand.length).toBe(5);
     });
 
-    it("should auto-reshuffle when deck empties mid-draw", () => {
+    it("auto-reshuffles when deck empties mid-draw", () => {
       const mockCard = createMockSkillCard();
       let state = produce(store.gameState, (draft) => {
         draft.run.deck = [mockCard, mockCard, mockCard];
@@ -60,7 +60,7 @@ describe("combatActions", () => {
   });
 
   describe("playCard", () => {
-    it("should move card to stagedCards", () => {
+    it("moves card to stagedCards", () => {
       const mockCard = createMockSkillCard({ energyCost: 1 });
       let state = produce(store.gameState, (draft) => {
         draft.run.hand = [mockCard];
@@ -73,7 +73,7 @@ describe("combatActions", () => {
       expect(state.run.combat?.stagedCards).toEqual([mockCard]);
     });
 
-    it("should deduct card cost from energyRemaining", () => {
+    it("deducts card cost from energyRemaining", () => {
       const mockCard = createMockSkillCard({ energyCost: 1 });
       let state = produce(store.gameState, (draft) => {
         draft.run.reservedEnergy = 0;
@@ -91,7 +91,7 @@ describe("combatActions", () => {
     afterEach(() => {
       delete effects["test"];
     });
-    it("should move all staged cards to an empty discard pile", () => {
+    it("moves all staged cards to an empty discard pile", () => {
       const mockCard = createMockSkillCard();
       let state = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
@@ -105,7 +105,7 @@ describe("combatActions", () => {
       expect(state.run.discardPile).toEqual([mockCard]);
     });
 
-    it("should move all staged cards to a nonempty discard pile", () => {
+    it("moves all staged cards to a nonempty discard pile", () => {
       const mockCard = createMockSkillCard();
       let state = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
@@ -120,7 +120,7 @@ describe("combatActions", () => {
       expect(state.run.discardPile).toEqual([mockCard, mockCard]);
     });
 
-    it("should correctly deal damage when commiting a damage dealing skill card", () => {
+    it("deals damage when commiting a damage dealing skill card", () => {
       const mockCard = createMockSkillCard({
         target: { kind: "enemy", enemyId: "test-enemy" },
         effectId: "test",
@@ -142,7 +142,7 @@ describe("combatActions", () => {
       expect(state.run.combat?.enemy.hp).toBe(5);
     });
 
-    it("should return state unchanged when commiting a hand with no skill/aura cards", () => {
+    it("returns state unchanged when commiting a hand with no skill/aura cards", () => {
       const mockCard = createMockSupportCard();
       const originalState = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
@@ -154,7 +154,7 @@ describe("combatActions", () => {
       expect(modifiedState).toEqual(originalState);
     });
 
-    it("should return state unchanged when commiting a hand with an aura card", () => {
+    it("returns state unchanged when commiting a hand with an aura card", () => {
       const mockCard = createMockAuraCard();
       const originalState = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
@@ -166,7 +166,7 @@ describe("combatActions", () => {
       expect(modifiedState).toEqual(originalState);
     });
 
-    it("should throw when commiting cards with unknown effectIds", () => {
+    it("throws when commiting cards with unknown effectIds", () => {
       const mockCard = createMockSkillCard();
       const originalState = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
@@ -200,7 +200,7 @@ describe("combatActions", () => {
   });
 
   describe("endTurn", () => {
-    it("should move all cards in hand to discardPile", () => {
+    it("moves all cards in hand to discardPile", () => {
       const mockCard = createMockSkillCard();
       let state = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
@@ -214,7 +214,7 @@ describe("combatActions", () => {
       expect(state.run.discardPile).toEqual([mockCard]);
     });
 
-    it("should draw a new hand", () => {
+    it("draws a new hand", () => {
       const mockCard = createMockSkillCard();
       let state = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
@@ -227,7 +227,7 @@ describe("combatActions", () => {
       expect(state.run.deck).toEqual([]);
     });
 
-    it("should reset energyRemaining to energyMax with no reserved energy", () => {
+    it("resets energyRemaining to energyMax with no reserved energy", () => {
       const mockCard = createMockSkillCard();
       let state = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
@@ -241,7 +241,7 @@ describe("combatActions", () => {
       expect(state.run.combat?.energyRemaining).toBe(BASE_MAX_ENERGY);
     });
 
-    it("should reset energyRemaining to energyMax - reservedEnergy", () => {
+    it("resets energyRemaining to energyMax - reservedEnergy", () => {
       const mockCard = createMockSkillCard();
       let state = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
@@ -257,7 +257,7 @@ describe("combatActions", () => {
   });
 
   describe("endCombat", () => {
-    it("should set combat to null", () => {
+    it("sets combat to null", () => {
       let state = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
       });
@@ -269,7 +269,7 @@ describe("combatActions", () => {
   });
 
   describe("applySkillOutput", () => {
-    it("should correctly reduce hp by the damage value", () => {
+    it("reduces hp by the damage value", () => {
       let state = produce({ ...store.gameState }, (draft) => {
         draft.run.combat = {
           ...initialCombatState,

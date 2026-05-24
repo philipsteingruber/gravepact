@@ -4,7 +4,7 @@ import { filterCompatibleMods, resolveSupports } from "./supports";
 
 describe("supports", () => {
   describe("filterCompatibleMods", () => {
-    it("should only return compatible mods", () => {
+    it("returns only compatible mods", () => {
       const mockCard = createMockSkillCard({ tags: ["Attack"] });
 
       const mockSupports = [
@@ -20,7 +20,7 @@ describe("supports", () => {
   });
 
   describe("resolveSupports", () => {
-    it("should correctly calculate multiplicative mods", () => {
+    it("multiplies damage by the multiplier of a multiplicative mod", () => {
       const skillOutput: SkillOutput = { damage: 10, statuses: [], targets: [{ kind: "enemy", enemyId: "" }] };
       const mod: SupportModification = { kind: "multiplicative", multiplier: 1.5 };
 
@@ -29,7 +29,7 @@ describe("supports", () => {
       expect(result.damage).toBe(15);
     });
 
-    it("should correctly handle additive mods", () => {
+    it("adds a status effect with the specified stack count", () => {
       const skillOutput: SkillOutput = { damage: 10, statuses: [], targets: [{ kind: "enemy", enemyId: "" }] };
       const mod: SupportModification = { kind: "additive", statusEffect: "Bleed", stacks: 1 };
 
