@@ -1,10 +1,16 @@
+// --- Primitives ---
+
 export type SkillTag = "Attack" | "Spell" | "Curse" | "Block" | "Summon";
 export type CardRarity = "Common" | "Uncommon" | "Rare";
+export type StatusEffectKind = "Bleed" | "Weaken" | "Burn" | "Armor";
+
+// --- Status Effects ---
+
+export type StatusEffect = { kind: StatusEffectKind; stacks: number };
+
+// --- Cards ---
 
 export type Target = { kind: "enemy"; enemyId: string };
-
-export type StatusEffectKind = "Bleed" | "Weaken" | "Burn" | "Armor";
-export type StatusEffect = { kind: StatusEffectKind; stacks: number };
 
 export type MultiplicativeEffect = { kind: "multiplicative"; multiplier: number };
 export type AdditiveEffect = { kind: "additive"; statusEffect: StatusEffectKind; stacks: number };
@@ -30,11 +36,7 @@ export type RelicCard = { kind: "relic"; effectId: string };
 
 export type Card = { id: string; name: string; rarity: CardRarity } & (SkillCard | SupportCard | AuraCard | RelicCard);
 
-export type MapNode = { id: string; name: string };
-
-export type Upgrade = { id: string; name: string };
-
-export type CharacterClass = { id: string; name: string };
+// --- Enemies ---
 
 export type AttackIntent = { kind: "attack"; damage: number };
 export type BlockIntent = { kind: "defend"; amount: number };
@@ -50,6 +52,14 @@ export type Enemy = {
   statuses: StatusEffect[];
 };
 
+// --- Entities ---
+
+export type MapNode = { id: string; name: string };
+export type Upgrade = { id: string; name: string };
+export type CharacterClass = { id: string; name: string };
+
+// --- State ---
+
 export type CombatState = {
   enemy: Enemy;
   energyRemaining: number;
@@ -63,9 +73,9 @@ export type RunState = {
   relics: RelicCard[];
   activeAuras: AuraCard[];
   health: number;
-  visitedNodes: MapNode[];
   maxHealth: number;
   reservedEnergy: number;
+  visitedNodes: MapNode[];
   combat: CombatState | null;
 };
 export type MetaState = {
@@ -78,4 +88,7 @@ export type MetaState = {
 export type GameState = { meta: MetaState; run: RunState };
 export type Store = { gameState: GameState };
 
+// --- Engine Outputs ---
+
 export type SkillOutput = { damage: number; statuses: StatusEffect[]; targets: Target[] };
+export type StatusTickResult = { enemy: Enemy; totalDamage: number };

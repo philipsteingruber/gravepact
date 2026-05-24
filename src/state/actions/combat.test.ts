@@ -283,5 +283,62 @@ describe("combatActions", () => {
 
       expect(state.run.combat!.enemy.hp).toBe(5);
     });
+
+    it("transfers statuses to the targets", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          enemy: createMockEnemy({ hp: 10, maxHp: 10, id: "test-enemy" }),
+        };
+      });
+
+      const skillOutput: SkillOutput = {
+        damage: 5,
+        statuses: [{ kind: "Bleed", stacks: 3 }],
+        targets: [{ enemyId: "test-enemy", kind: "enemy" }],
+      };
+
+      state = applySkillOutput(state, skillOutput);
+
+      expect(state.run.combat?.enemy.statuses).toContainEqual({ kind: "Bleed", stacks: 3 });
+    });
+
+    it("only reduces HP by damage overflowing the target's armor", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          enemy: createMockEnemy({ hp: 10, maxHp: 10, id: "test-enemy", statuses: [{ kind: "Armor", stacks: 5 }] }),
+        };
+      });
+
+      const skillOutput: SkillOutput = {
+        damage: 10,
+        statuses: [],
+        targets: [{ enemyId: "test-enemy", kind: "enemy" }],
+      };
+
+      state = applySkillOutput(state, skillOutput);
+
+      expect(state.run.combat?.enemy.hp).toBe(5);
+    });
+
+    it("depletes armor stacks before reducing HP", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          enemy: createMockEnemy({ hp: 10, maxHp: 10, id: "test-enemy", statuses: [{ kind: "Armor", stacks: 5 }] }),
+        };
+      });
+
+      const skillOutput: SkillOutput = {
+        damage: 5,
+        statuses: [],
+        targets: [{ enemyId: "test-enemy", kind: "enemy" }],
+      };
+
+      state = applySkillOutput(state, skillOutput);
+
+      expect(state.run.combat?.enemy.statuses).toEqual([]);
+    });
   });
 });

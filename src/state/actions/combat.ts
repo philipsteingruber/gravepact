@@ -1,4 +1,5 @@
 import { effects } from "@/engine/effects";
+import { applyStatuses, resolveIncomingDamage } from "@/engine/statuses";
 import { filterCompatibleMods, resolveSupports } from "@/engine/supports";
 import { BASE_HAND_SIZE } from "@/lib/constants";
 import type { Card, Enemy, GameState, SkillOutput, SupportCard } from "@/lib/types";
@@ -100,8 +101,10 @@ export const applySkillOutput = (state: GameState, skillOutput: SkillOutput): Ga
 
   return produce(state, (draft) => {
     skillOutput.targets.forEach((target) => {
-      if (target.enemyId === draft.run.combat!.enemy.id)
-        draft.run.combat!.enemy.hp = Math.max(0, draft.run.combat!.enemy.hp - skillOutput.damage);
+      if (target.enemyId === draft.run.combat!.enemy.id) {
+        draft.run.combat!.enemy = applyStatuses(draft.run.combat!.enemy, skillOutput.statuses);
+        draft.run.combat!.enemy = resolveIncomingDamage(draft.run.combat!.enemy, skillOutput.damage);
+      }
     });
   });
 };

@@ -62,7 +62,16 @@ Enemies telegraph their next action each turn — attack, defend, apply debuff �
 
 **Status effects:**
 
-A small set of stackable statuses that skills, supports, and Auras can apply and interact with. Initial set: **Burn**, **Bleed**, **Weaken**, **Armor**. Some supports interact specifically with statuses (e.g. "if target is Burning, also apply Bleed") — this is where PoE's ailment-stacking depth emerges.
+A small set of stackable statuses that skills, supports, and Auras can apply and interact with. Initial set: **Burn**, **Bleed**, **Weaken**, **Armor**. Statuses are tracked on each combatant as `{ kind: StatusEffectKind; stacks: number }`. Applying a status a second time adds stacks rather than resetting.
+
+Status mechanics (Phase 1: enemies only — player statuses deferred):
+
+- **Burn** — ticks at the start of the enemy's turn, dealing damage equal to its stack count. Stacks persist until combat ends.
+- **Bleed** — ticks at the start of the enemy's turn, dealing `floor(stacks / BLEED_TICK_DIVISOR)` damage. When the enemy executes an attack, Bleed additionally deals bonus damage equal to its stack count (the wound reopens under exertion). Stacks persist until combat ends.
+- **Weaken** — no tick damage. Reduces the enemy's attack damage by `stacks × WEAKEN_PER_STACK`, clamped so attack damage never goes below zero.
+- **Armor** — no tick damage. Absorbs incoming damage 1-per-stack before HP is reduced; stacks deplete as damage consumes them. Enemies apply Armor to themselves via defend intents.
+
+Some supports interact specifically with statuses (e.g. "if target is Burning, also apply Bleed") — this is where PoE's ailment-stacking depth emerges.
 
 **Relics:**
 
@@ -180,6 +189,18 @@ Scenes read from state and never mutate it directly. All mutations go through de
 - `endTurn(state)` — discards remaining hand, resets `energyRemaining`, calls `drawHand`; scene calls `resolveEnemyTurn` after
 - `endCombat(state)` — sets `run.combat` to `null`
 
+**Status effects** (`src/engine/statuses.ts`):
+
+Pure functions with no Phaser dependency, following the same pattern as `supports.ts`:
+
+- `applyStatuses(enemy, incoming: StatusEffect[]): Enemy` — merges stacks onto the enemy; same-kind stacks add, different kinds coexist
+- `tickStatuses(enemy): { enemy: Enemy; totalDamage: number }` — processes Burn and Bleed tick damage at the start of the enemy's turn; returns updated enemy and total damage dealt
+- `resolveIncomingDamage(enemy, damage: number): Enemy` — depletes Armor stacks first, then reduces HP; replaces direct HP mutation in `applySkillOutput`
+- `getWeakenMultiplier(enemy): number` — returns `1 - (stacks × WEAKEN_PER_STACK)`, clamped to `[0, 1]`; used in enemy turn resolution when computing attack damage
+- `getBleedAttackBonus(enemy): number` — returns Bleed stack count as bonus damage; called from `resolveEnemyTurn` when the enemy executes an attack
+
+Constants `WEAKEN_PER_STACK` and `BLEED_TICK_DIVISOR` live in `src/lib/constants.ts`, flagged for playtesting.
+
 **State store:**
 
 Game state is held in a single mutable container exported from `src/state/store.ts`:
@@ -215,7 +236,7 @@ Cards are defined as plain TypeScript data objects, not classes.
 ## Open Questions
 
 - Prestige currency award formula (when/if a prestige layer is added)
-- Exact status effect stack caps and interaction rules (balancing)
+- Status effect tuning constants (`WEAKEN_PER_STACK`, `BLEED_TICK_DIVISOR`) and stack caps — flagged for playtesting
 - Aura reservation playtesting — may change to pay-once model
 - Support-on-Aura interaction (future consideration)
 - `changeBehavior` support modification — deferred until multi-enemy model is in place; will modify the `targets` array in `SkillOutput` to include all active enemies
