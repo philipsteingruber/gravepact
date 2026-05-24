@@ -22,7 +22,9 @@ Game logic lives in pure TypeScript with no Phaser dependency. Phaser is the ren
 src/
   state/        # GameState types (RunState, MetaState), Immer actions
   engine/       # Pure TS — combat resolution, deck management, map generation
-  data/         # Static card and enemy data
+  data/
+    cards/      # Skill, support, aura, and relic card data objects (one file per card type)
+    enemies.ts  # Enemy data objects, organized by location
   scenes/       # Phaser scenes (Boot, Hub, Map, Combat, Reward)
 ```
 
@@ -86,6 +88,14 @@ For any non-trivial logic in `engine/` or `state/`, start with a failing test. S
 - Mutating the `gameState` singleton directly in tests — state bleeds between tests.
 - Nesting `produce` inside a test when the function under test already uses `produce` — just call the function and assert on the returned value.
 - Discarding the return value of pure functions and asserting on the input instead.
+
+## Naming Inspiration
+
+When workshopping location names, enemy names, card names, or other thematic content, use PoE as the primary naming reference:
+
+- **`docs/inspiration/skills.md`** — PoE skill gem names, organized by attribute (Strength/Attack, Dexterity/Ranged, Intelligence/Spell+Curse). Use for Gravepact skill card names.
+- **`docs/inspiration/supports.md`** — PoE support gem names, organized by attribute. Use for Gravepact support card names.
+- **[poewiki.net](https://www.poewiki.net)** — for area names, enemy names, monster lore, and anything not in the above files.
 
 ## Misc
 

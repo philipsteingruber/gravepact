@@ -13,11 +13,11 @@
 - [x] Support resolution: tag compatibility filter, apply `multiplicative` and `additive` modifications to skill output (`changeBehavior` and `reduceCost` deferred)
 - [x] Status effect system: apply/stack Burn, Bleed, Weaken, Armor; per-turn tick logic
 - [x] Enemy model: enemy data structure, intent cycling, enemy action resolution
-- [ ] First card set: 3–5 skill effects in registry + card data objects, 2–3 supports
-- [ ] First enemy set: 3 enemies with hp, intent cycles, for the first location
+- [x] First card set: 3–5 skill effects in registry + card data objects, 2–3 supports
+- [x] First enemy set: 3 enemies with hp, intent cycles, for the first location
 - [ ] Node map generation: branching path structure, node types (combat, elite, shop, rest, boss), boss placement
-- [ ] Post-combat reward: sample 3 cards weighted by rarity, add chosen card to deck
-- [ ] Minimal combat UI: hand display, energy pips, player/enemy health bars, enemy intent, end-turn button
+- [ ] Post-combat reward: sample 3 cards (uniform, no rarity weighting yet), add chosen card to deck
+- [ ] Minimal combat UI: hand display, staging zone, energy pips, player/enemy health bars, enemy intent, Play Hand button, End Turn button
 - [ ] Minimal map UI: node rendering, available path highlighting, node selection
 
 ## Phase 2 — Full Card System
@@ -30,6 +30,7 @@
 - [ ] Relic slot: hold up to 4 relics, trigger relic effects at appropriate combat events
 - [ ] Shop node: buy cards, buy relics, optional card removal
 - [ ] Card removal: remove a card from deck permanently (shop mechanic)
+- [ ] Resolve Armor vs. tick damage: decide whether Burn/Bleed ticks pierce Armor or are absorbed; update `tickStatuses` and `resolveIncomingDamage` accordingly
 - [ ] Card rarity weights: rarity-weighted pool sampling for rewards and shops
 - [ ] Rest site node: choose to heal or upgrade a card
 - [ ] Card upgrade: each card has an upgraded variant with improved effect

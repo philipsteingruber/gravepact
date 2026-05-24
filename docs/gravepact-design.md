@@ -238,6 +238,51 @@ Cards are defined as plain TypeScript data objects, not classes.
 
 ---
 
+## Section 6 — First Location: The Rotting Strand
+
+A coastal flats location — drowned revenants, corrosive tide, things washed ashore that shouldn't be. The first location in a run and the source of Phase 1's card and enemy pool.
+
+**Data files:**
+
+- `src/data/cards/skills.ts` — skill card data objects
+- `src/data/cards/supports.ts` — support card data objects
+- `src/data/enemies.ts` — enemy data objects
+
+Card effects are registered in `src/engine/effects.ts` by `effectId`.
+
+**Skill cards:**
+
+| Name          | Tag    | Cost | effectId        | Effect                   |
+| ------------- | ------ | ---- | --------------- | ------------------------ |
+| Exsanguinate  | Attack | 1    | `exsanguinate`  | 8 damage, apply 2 Bleed  |
+| Scorching Ray | Spell  | 1    | `scorching_ray` | 6 damage, apply 2 Burn   |
+| Enfeeble      | Curse  | 1    | `enfeeble`      | Apply 3 Weaken           |
+| Lacerate      | Attack | 2    | `lacerate`      | 14 damage, apply 3 Bleed |
+
+All skill cards are Common rarity. Damage values and status stack counts are flagged for playtesting.
+
+**Support cards:**
+
+| Name       | Compatible tags | Cost | Modification               |
+| ---------- | --------------- | ---- | -------------------------- |
+| Bloodlust  | Attack          | 1    | Multiplicative 1.5× damage |
+| Combustion | Spell           | 0    | Additive +2 Burn stacks    |
+| Maim       | Attack, Curse   | 0    | Additive +1 Weaken stack   |
+
+All support cards are Common rarity.
+
+**Enemies:**
+
+| Name               | HP  | Intent cycle                          |
+| ------------------ | --- | ------------------------------------- |
+| Drowned Exile      | 20  | attack 6 → attack 6 → attack 6        |
+| Barnacled Revenant | 28  | attack 8 → defend 4 Armor → attack 5  |
+| Tide Hulk          | 40  | attack 12 → attack 5 → defend 6 Armor |
+
+HP values and intent damage are flagged for playtesting.
+
+---
+
 ## Open Questions
 
 - Prestige currency award formula (when/if a prestige layer is added)

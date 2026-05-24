@@ -1,7 +1,6 @@
-import { effects } from "@/engine/effects";
 import { BASE_MAX_ENERGY, BASE_MAX_HEALTH } from "@/lib/constants";
 import { createMockAuraCard, createMockEnemy, createMockSkillCard, createMockSupportCard } from "@/lib/test-helpers";
-import type { GameState, SkillOutput, Target } from "@/lib/types";
+import type { SkillOutput } from "@/lib/types";
 import { produce } from "immer";
 import { initialCombatState } from "../combat-state";
 import { store } from "../store";
@@ -90,16 +89,12 @@ describe("combatActions", () => {
   });
 
   describe("commitHand", () => {
-    afterEach(() => {
-      delete effects["test"];
-    });
     it("moves all staged cards to an empty discard pile", () => {
       const mockCard = createMockSkillCard();
       let state = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
         draft.run.combat.stagedCards = [mockCard];
       });
-      effects["test"] = (_state, targets) => ({ damage: 10, statuses: [], targets }) satisfies SkillOutput;
 
       state = commitHand(state);
 
@@ -114,7 +109,6 @@ describe("combatActions", () => {
         draft.run.combat.stagedCards = [mockCard];
         draft.run.discardPile = [mockCard];
       });
-      effects["test"] = (_state, targets) => ({ damage: 10, statuses: [], targets }) satisfies SkillOutput;
 
       state = commitHand(state);
 
@@ -125,11 +119,7 @@ describe("combatActions", () => {
     it("deals damage when commiting a damage dealing skill card", () => {
       const mockCard = createMockSkillCard({
         target: { kind: "enemy", enemyId: "test-enemy" },
-        effectId: "test",
       });
-
-      effects["test"] = (_state: GameState, targets: Target[]) =>
-        ({ damage: 5, statuses: [], targets }) satisfies SkillOutput;
 
       let state = produce(store.gameState, (draft) => {
         draft.run.combat = {
@@ -141,7 +131,7 @@ describe("combatActions", () => {
 
       state = commitHand(state);
 
-      expect(state.run.combat?.enemy.hp).toBe(5);
+      expect(state.run.combat?.enemy.hp).toBe(2);
     });
 
     it("returns state unchanged when commiting a hand with no skill/aura cards", () => {
@@ -168,19 +158,7 @@ describe("combatActions", () => {
       expect(modifiedState).toEqual(originalState);
     });
 
-    it("throws when commiting cards with unknown effectIds", () => {
-      const mockCard = createMockSkillCard();
-      const originalState = produce(store.gameState, (draft) => {
-        draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
-        draft.run.combat.stagedCards = [mockCard];
-      });
-
-      expect(() => commitHand(originalState)).toThrow();
-    });
-
     it("applies compatible support modifications when commiting a skill", () => {
-      effects["test"] = (_state, targets) => ({ damage: 10, statuses: [], targets }) satisfies SkillOutput;
-
       const mockSkillCard = createMockSkillCard({ tags: ["Attack"], target: { kind: "enemy", enemyId: "test" } });
       const mockSupportCard = createMockSupportCard({
         compatibleTags: ["Attack"],
@@ -197,7 +175,7 @@ describe("combatActions", () => {
         }),
       );
 
-      expect(state.run.combat!.enemy.hp).toBe(5);
+      expect(state.run.combat!.enemy.hp).toBe(8);
     });
   });
 

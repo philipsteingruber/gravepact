@@ -16,7 +16,7 @@ export const createMockEnemy = (overrides?: Partial<Enemy>): Enemy => {
 export const createMockSkillCard = (overrides?: Partial<SkillCard>): Card => {
   return {
     kind: "skill",
-    effectId: "test",
+    effectId: "exsanguinate",
     energyCost: 1,
     tags: [],
     id: "mock_card",

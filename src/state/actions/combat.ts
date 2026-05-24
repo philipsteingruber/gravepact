@@ -56,17 +56,19 @@ export const commitHand = (state: GameState) => {
   )
     return state;
 
-  if (state.run.combat.stagedCards.some((card) => card.kind === "skill")) {
-    const skillCard = state.run.combat.stagedCards.find((card) => card.kind === "skill")!;
+  const combat = state.run.combat!;
+
+  if (combat.stagedCards.some((card) => card.kind === "skill")) {
+    const skillCard = combat.stagedCards.find((card) => card.kind === "skill")!;
 
     const effect = effects[skillCard.effectId];
     if (!effect) throw new Error(`Unregistered effectId: ${skillCard.effectId}`);
 
     const mods = filterCompatibleMods({
       skill: skillCard,
-      supports: state.run.combat!.stagedCards.filter((card) => card !== skillCard) as SupportCard[],
+      supports: combat.stagedCards.filter((card) => card !== skillCard) as SupportCard[],
     });
-    const skillOutput = effect(state, [skillCard.target]);
+    const skillOutput = effect(state, [{ kind: "enemy", enemyId: combat.enemy.id }]);
 
     const modifiedSkillOutput = resolveSupports({ skillOutput, mods });
     state = applySkillOutput(state, modifiedSkillOutput);

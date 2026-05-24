@@ -26,3 +26,5 @@ dist-ssr
 .zed/
 
 .claude/settings.local.json
+
+docs/inspiration/

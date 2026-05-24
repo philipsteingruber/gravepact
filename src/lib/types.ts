@@ -1,5 +1,7 @@
 // --- Primitives ---
 
+import type { EffectId } from "@/engine/effects";
+
 export type SkillTag = "Attack" | "Spell" | "Curse" | "Block" | "Summon";
 export type CardRarity = "Common" | "Uncommon" | "Rare";
 export type StatusEffectKind = "Bleed" | "Weaken" | "Burn" | "Armor";
@@ -22,7 +24,7 @@ export type SkillCard = {
   kind: "skill";
   tags: SkillTag[];
   target: Target;
-  effectId: string;
+  effectId: EffectId;
   energyCost: number;
 };
 export type SupportCard = {
