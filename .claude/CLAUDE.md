@@ -65,12 +65,17 @@ Magic numbers (energy costs, card rarity weights, Shard drop rates, status effec
 
 For any non-trivial logic in `engine/` or `state/`, start with a failing test. Skipping TDD is allowed for exploratory or throwaway code, but must be stated explicitly. When guiding implementation, always ask "what test would prove this works?" before discussing how to implement it.
 
+**Pacing:** RED and GREEN are two separate steps. Guide the user to write the test first, confirm it fails, then stop. Only move to implementation after the RED step is complete. Do not combine both steps in one response.
+
+**Code in TDD guidance:** Describe what the test should assert and why in prose — do not write code blocks. The user writes the code themselves. Only provide code if they're stuck or explicitly ask.
+
 **Test structure:**
 
-- One behavior per test. If the name contains "and", split it.
+- One behavior per test. If the name contains "and", split it. **Enforce this actively** — if the user writes a test covering multiple behaviors, flag it and ask them to split before moving on.
 - Name tests after the behavior, not the implementation: `"draws all remaining cards when deck is smaller than count"`, not `"splice edge case"`.
 - Co-locate test files with source: `deck.ts` → `deck.test.ts`.
 - Use `describe` to group tests for the same function or module.
+- Test names must describe the behavior and outcome, not just that the function runs. If the user writes a test with a bad name, flag it immediately and ask them to rename it before moving on. Bad names: use filler words like "correctly" or "properly" (they say nothing about what correct means), use the "should" prefix (implied — every test either passes or fails), contain hardcoded magic numbers (they go stale when balance constants change — describe the mechanic instead), or are too vague to tell you what broke when the test fails.
 
 **Fixtures and state:**
 
