@@ -6,7 +6,8 @@ export const createMockEnemy = (overrides?: Partial<Enemy>): Enemy => {
     name: "Mock Enemy",
     hp: 20,
     maxHp: 20,
-    intent: { kind: "attack", damage: 5 },
+    intents: [{ kind: "attack", damage: 5 }],
+    intentIndex: 0,
     statuses: [],
     ...overrides,
   };

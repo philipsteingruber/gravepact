@@ -1,5 +1,6 @@
+import { resolveEnemyAttack } from "@/engine/combat";
 import { effects } from "@/engine/effects";
-import { applyStatuses, resolveIncomingDamage } from "@/engine/statuses";
+import { applyStatuses, getBleedAttackBonus, resolveIncomingDamage, tickStatuses } from "@/engine/statuses";
 import { filterCompatibleMods, resolveSupports } from "@/engine/supports";
 import { BASE_HAND_SIZE } from "@/lib/constants";
 import type { Card, Enemy, GameState, SkillOutput, SupportCard } from "@/lib/types";
@@ -36,13 +37,15 @@ export const playCard = (state: GameState, card: Card) => {
   if (!state.run.hand.includes(card) || !state.run.combat) return state;
 
   return produce(state, (draft) => {
+    const combat = draft.run.combat!;
+
     if ("energyCost" in card) {
-      draft.run.combat!.energyRemaining -= card.energyCost;
+      combat.energyRemaining -= card.energyCost;
     }
 
     const cardIndex = draft.run.hand.findIndex((c) => c === card);
     draft.run.hand.splice(cardIndex, 1);
-    draft.run.combat!.stagedCards.push(card);
+    combat.stagedCards.push(card);
   });
 };
 
@@ -73,8 +76,9 @@ export const commitHand = (state: GameState) => {
   }
 
   return produce(state, (draft) => {
-    draft.run.discardPile.push(...draft.run.combat!.stagedCards);
-    draft.run.combat!.stagedCards = [];
+    const combat = draft.run.combat!;
+    draft.run.discardPile.push(...combat.stagedCards);
+    combat.stagedCards = [];
   });
 };
 
@@ -82,9 +86,10 @@ export const endTurn = (state: GameState) => {
   if (!state.run.combat) return state;
 
   state = produce(state, (draft) => {
+    const combat = draft.run.combat!;
     draft.run.discardPile.push(...draft.run.hand);
     draft.run.hand = [];
-    draft.run.combat!.energyRemaining = draft.run.combat!.energyMax - draft.run.reservedEnergy;
+    combat.energyRemaining = combat.energyMax - draft.run.reservedEnergy;
   });
 
   return drawHand(state);
@@ -100,11 +105,37 @@ export const applySkillOutput = (state: GameState, skillOutput: SkillOutput): Ga
   if (!state.run.combat) return state;
 
   return produce(state, (draft) => {
+    const combat = draft.run.combat!;
     skillOutput.targets.forEach((target) => {
-      if (target.enemyId === draft.run.combat!.enemy.id) {
-        draft.run.combat!.enemy = applyStatuses(draft.run.combat!.enemy, skillOutput.statuses);
-        draft.run.combat!.enemy = resolveIncomingDamage(draft.run.combat!.enemy, skillOutput.damage);
+      if (target.enemyId === combat.enemy.id) {
+        combat.enemy = applyStatuses(combat.enemy, skillOutput.statuses);
+        combat.enemy = resolveIncomingDamage(combat.enemy, skillOutput.damage);
       }
     });
   });
+};
+
+export const resolveEnemyTurn = (state: GameState): GameState => {
+  if (!state.run.combat) return state;
+  const intent = getCurrentEnemyIntent(state.run.combat.enemy);
+  return produce(state, (draft) => {
+    const combat = draft.run.combat!;
+    combat.enemy = tickStatuses(combat.enemy).enemy;
+
+    if (intent.kind === "attack") {
+      draft.run.playerHealth = Math.max(0, draft.run.playerHealth - resolveEnemyAttack(combat.enemy, intent));
+
+      combat.enemy = resolveIncomingDamage(combat.enemy, getBleedAttackBonus(combat.enemy));
+    } else if (intent.kind === "defend") {
+      combat.enemy = applyStatuses(combat.enemy, [{ kind: "Armor", stacks: intent.amount }]);
+    } else if (intent.kind === "debuff") {
+      return; // TODO: Placeholder
+    }
+
+    combat.enemy.intentIndex = (combat.enemy.intentIndex + 1) % combat.enemy.intents.length;
+  });
+};
+
+const getCurrentEnemyIntent = (enemy: Enemy) => {
+  return enemy.intents[enemy.intentIndex];
 };

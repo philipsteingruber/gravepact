@@ -1,11 +1,20 @@
 import { effects } from "@/engine/effects";
-import { BASE_MAX_ENERGY } from "@/lib/constants";
+import { BASE_MAX_ENERGY, BASE_MAX_HEALTH } from "@/lib/constants";
 import { createMockAuraCard, createMockEnemy, createMockSkillCard, createMockSupportCard } from "@/lib/test-helpers";
-import type { Enemy, GameState, SkillOutput, Target } from "@/lib/types";
+import type { GameState, SkillOutput, Target } from "@/lib/types";
 import { produce } from "immer";
 import { initialCombatState } from "../combat-state";
 import { store } from "../store";
-import { applySkillOutput, commitHand, drawHand, endCombat, endTurn, playCard, startCombat } from "./combat";
+import {
+  applySkillOutput,
+  commitHand,
+  drawHand,
+  endCombat,
+  endTurn,
+  playCard,
+  resolveEnemyTurn,
+  startCombat,
+} from "./combat";
 
 describe("combatActions", () => {
   describe("startCombat", () => {
@@ -14,20 +23,13 @@ describe("combatActions", () => {
         draft.run.reservedEnergy = 0;
       });
 
-      state = startCombat(state, {
-        hp: 10,
-        id: "test_enemy",
-        intent: { kind: "attack", damage: 5 },
-        maxHp: 10,
-        name: "Test Enemy",
-        statuses: [],
-      } as Enemy);
+      state = startCombat(state, createMockEnemy());
 
       expect(state.run.combat).not.toBeNull();
       expect(state.run.combat?.energyMax).toBe(BASE_MAX_ENERGY);
       expect(state.run.combat?.energyRemaining).toBe(BASE_MAX_ENERGY);
       expect(state.run.combat?.stagedCards).toEqual([]);
-      expect(state.run.combat?.enemy.id).toBe("test_enemy");
+      expect(state.run.combat?.enemy.id).toBe("mock_enemy");
     });
   });
 
@@ -189,7 +191,7 @@ describe("combatActions", () => {
         produce({ ...store.gameState }, (draft) => {
           draft.run.combat = {
             ...initialCombatState,
-            enemy: { hp: 20, maxHp: 20, id: "test", intent: { kind: "attack", damage: 5 }, name: "test", statuses: [] },
+            enemy: createMockEnemy({ id: "test", hp: 20 }),
           };
           draft.run.combat.stagedCards = [mockSkillCard, mockSupportCard];
         }),
@@ -339,6 +341,156 @@ describe("combatActions", () => {
       state = applySkillOutput(state, skillOutput);
 
       expect(state.run.combat?.enemy.statuses).toEqual([]);
+    });
+  });
+
+  describe("resolveEnemyTurn", () => {
+    it("reduces enemy HP by Burn stack count at start of turn", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          enemy: createMockEnemy({ hp: 10, statuses: [{ kind: "Burn", stacks: 3 }] }),
+        };
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.combat?.enemy.hp).toBe(7);
+    });
+
+    it("reduces enemy HP by floored Bleed tick damage at start of turn", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          enemy: createMockEnemy({
+            hp: 10,
+            statuses: [{ kind: "Bleed", stacks: 3 }],
+            intents: [{ kind: "defend", amount: 1 }],
+          }),
+        };
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.combat?.enemy.hp).toBe(9);
+    });
+
+    it("reduces player health by attack damage", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          enemy: createMockEnemy({ intents: [{ kind: "attack", damage: 5 }] }),
+        };
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.playerHealth).toBe(BASE_MAX_HEALTH - 5);
+    });
+
+    it("deals Bleed stack count as bonus damage to the enemy when it attacks", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          enemy: createMockEnemy({
+            hp: 10,
+            intents: [{ kind: "attack", damage: 5 }],
+            statuses: [{ kind: "Bleed", stacks: 2 }],
+          }),
+        };
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.combat!.enemy.hp).toBe(7);
+    });
+
+    it("applies Armor stack to an enemy with defend intent", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          enemy: createMockEnemy({
+            hp: 10,
+            intents: [{ kind: "defend", amount: 5 }],
+            statuses: [],
+          }),
+        };
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.combat!.enemy.statuses).toContainEqual({ kind: "Armor", stacks: 5 });
+    });
+
+    it("adds to existing Armor if the enemy already has some", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          enemy: createMockEnemy({
+            hp: 10,
+            intents: [{ kind: "defend", amount: 5 }],
+            statuses: [{ kind: "Armor", stacks: 2 }],
+          }),
+        };
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.combat!.enemy.statuses).toContainEqual({ kind: "Armor", stacks: 7 });
+    });
+
+    it("leaves player HP unchanged on a debuff intent", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          enemy: createMockEnemy({
+            hp: 10,
+            intents: [{ kind: "debuff", effectKind: "Bleed", stacks: 5 }],
+          }),
+        };
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.playerHealth).toBe(BASE_MAX_HEALTH);
+    });
+
+    it("advances intentIndex by 1 after executing", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          enemy: createMockEnemy({
+            intentIndex: 0,
+            intents: [
+              { kind: "attack", damage: 1 },
+              { kind: "attack", damage: 1 },
+            ],
+          }),
+        };
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.combat!.enemy.intentIndex).toBe(1);
+    });
+
+    it("wraps intentIndex back to 0 after last intent", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          enemy: createMockEnemy({
+            intentIndex: 1,
+            intents: [
+              { kind: "attack", damage: 1 },
+              { kind: "attack", damage: 1 },
+            ],
+          }),
+        };
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.combat!.enemy.intentIndex).toBe(0);
     });
   });
 });

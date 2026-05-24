@@ -48,7 +48,8 @@ export type Enemy = {
   name: string;
   hp: number;
   maxHp: number;
-  intent: EnemyIntent;
+  intents: EnemyIntent[];
+  intentIndex: number;
   statuses: StatusEffect[];
 };
 
@@ -72,8 +73,8 @@ export type RunState = {
   discardPile: Card[];
   relics: RelicCard[];
   activeAuras: AuraCard[];
-  health: number;
-  maxHealth: number;
+  playerHealth: number;
+  playerMaxHealth: number;
   reservedEnergy: number;
   visitedNodes: MapNode[];
   combat: CombatState | null;

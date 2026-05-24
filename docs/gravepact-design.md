@@ -174,9 +174,9 @@ Game logic (deck state, combat engine, meta-progression) lives in pure TypeScrip
 
 `GameState` is `{ run: RunState; meta: MetaState }` — always nested, never flat.
 
-`RunState` holds: `deck`, `hand`, `discardPile`, `relics`, `activeAuras`, `health`, `maxHealth`, `energyReservation`, and `combatState: CombatState | null`. `MetaState` holds: `orbs`, `unlockedCards`, `purchasedUpgrades`, `unlockedClasses`. Only `MetaState` is persisted to localStorage.
+`RunState` holds: `deck`, `hand`, `discardPile`, `relics`, `activeAuras`, `playerHealth`, `playerMaxHealth`, `energyReservation`, and `combatState: CombatState | null`. `MetaState` holds: `orbs`, `unlockedCards`, `purchasedUpgrades`, `unlockedClasses`. Only `MetaState` is persisted to localStorage.
 
-`CombatState` is non-null only during an active fight. It holds: `enemy: Enemy` (required — always present when combat is active; HP, maxHP, intent, status effects), `energyRemaining`, `energyMax` (base 3 minus current reservation), and `stagedCards: Card[]` (the cards the player has clicked but not yet committed — cleared on each Play Hand). `enemy` is required rather than optional because a `CombatState` only exists when there is an enemy — the outer `combat: CombatState | null` on `RunState` is the single nullability boundary. When combat ends, `combat` is set back to `null`.
+`CombatState` is non-null only during an active fight. It holds: `enemy: Enemy` (required — always present when combat is active; HP, maxHP, `intents: EnemyIntent[]` (the full cycle), `intentIndex: number` (current position in the cycle), status effects), `energyRemaining`, `energyMax` (base 3 minus current reservation), and `stagedCards: Card[]` (the cards the player has clicked but not yet committed — cleared on each Play Hand). `enemy` is required rather than optional because a `CombatState` only exists when there is an enemy — the outer `combat: CombatState | null` on `RunState` is the single nullability boundary. When combat ends, `combat` is set back to `null`.
 
 Scenes read from state and never mutate it directly. All mutations go through dedicated action functions in `src/state/actions/`, organized by domain (`combat.ts`, `deck.ts`, `meta.ts`). Actions are pure functions — `(state: GameState, ...args) => GameState` — each calling Immer's `produce` internally and returning the new state.
 
@@ -187,6 +187,7 @@ Scenes read from state and never mutate it directly. All mutations go through de
 - `playCard(state, cardId)` — moves card from hand to `stagedCards`, deducts `energyCost` from `energyRemaining`
 - `commitHand(state)` — validates and resolves the staged bundle. A valid bundle requires exactly one skill or one aura card. If neither is present, returns state unchanged (no-op). If only an aura is staged, also a no-op until Phase 2 aura resolution is implemented. If a skill is staged, looks up `effectId` in the effect registry and calls the effect function with the current enemy as target; if `effectId` is not registered, throws — this is always a developer error. After resolution, moves all staged cards to discard and clears `stagedCards`. When a skill is staged, `commitHand` first filters staged support cards by tag compatibility — a support is compatible if any item in its `compatibleTags` intersects with the skill's `tags`. Compatible supports are collected into a `SupportModification[]` list. The skill's effect function (typed as `(state: GameState, targets: Target[]) => SkillOutput`) returns a `SkillOutput` object `{ damage: number; statuses: StatusEffect[]; targets: Target[] }` rather than a `GameState`. The engine then applies modifications to the output — `multiplicative` scales `damage`, `additive` appends to `statuses` — and writes the final result to state via `applySkillOutput`. Incompatible supports (no tag match) and the `changeBehavior` and `reduceCost` modification types are silently ignored until their prerequisites are in place (multi-enemy model and inter-turn cost tracking, respectively). Support resolution lives in `src/engine/supports.ts` as two pure functions: `filterCompatibleMods` and `resolveSupports({ skillOutput, mods })` — the parameter is named `skillOutput` (not `output`) to make clear it is the skill effect's result being passed in as input.
 - `endTurn(state)` — discards remaining hand, resets `energyRemaining`, calls `drawHand`; scene calls `resolveEnemyTurn` after
+- `resolveEnemyTurn(state)` — executes the enemy's turn in three steps: (1) ticks active statuses via `tickStatuses`, applying Burn and Bleed damage to the enemy; (2) executes the current intent — `attack` damages the player via `resolveEnemyAttack`, then also applies `getBleedAttackBonus(enemy)` damage back to the enemy via `resolveIncomingDamage` (the wound reopens under exertion), `defend` applies Armor to the enemy via `applyStatuses`, `debuff` is a no-op until player statuses are implemented; (3) advances `intentIndex` by 1, wrapping with modulo so the cycle repeats. Single-enemy only — multi-enemy combat is deferred.
 - `endCombat(state)` — sets `run.combat` to `null`
 
 **Status effects** (`src/engine/statuses.ts`):
@@ -197,9 +198,13 @@ Pure functions with no Phaser dependency, following the same pattern as `support
 - `tickStatuses(enemy): { enemy: Enemy; totalDamage: number }` — processes Burn and Bleed tick damage at the start of the enemy's turn; returns updated enemy and total damage dealt
 - `resolveIncomingDamage(enemy, damage: number): Enemy` — depletes Armor stacks first, then reduces HP; replaces direct HP mutation in `applySkillOutput`
 - `getWeakenMultiplier(enemy): number` — returns `1 - (stacks × WEAKEN_PER_STACK)`, clamped to `[0, 1]`; used in enemy turn resolution when computing attack damage
-- `getBleedAttackBonus(enemy): number` — returns Bleed stack count as bonus damage; called from `resolveEnemyTurn` when the enemy executes an attack
+- `getBleedAttackBonus(enemy): number` — returns Bleed stack count as bonus damage dealt back to the enemy when it attacks; the wound reopens under exertion. Called from `resolveEnemyTurn` when the enemy executes an attack intent.
 
 Constants `WEAKEN_PER_STACK` and `BLEED_TICK_DIVISOR` live in `src/lib/constants.ts`, flagged for playtesting.
+
+**Enemy combat resolution** (`src/engine/combat.ts`):
+
+- `resolveEnemyAttack(enemy, intent: AttackIntent): number` — computes damage dealt to the player: applies `getWeakenMultiplier` to scale down base damage and floors the result. Does not include Bleed bonus — that is applied separately to the enemy. Called internally by `resolveEnemyTurn`; pure and independently testable.
 
 **State store:**
 
@@ -241,3 +246,4 @@ Cards are defined as plain TypeScript data objects, not classes.
 - Support-on-Aura interaction (future consideration)
 - `changeBehavior` support modification — deferred until multi-enemy model is in place; will modify the `targets` array in `SkillOutput` to include all active enemies
 - `reduceCost` support modification — deferred until inter-turn cost tracking is in place; will reduce `energyCost` of the next skill played after the combo resolves
+- Does Armor absorb Burn/Bleed tick damage? The Armor description ("absorbs incoming damage 1-per-stack") has no source qualifier, implying it applies to all damage including ticks — but making DoTs armor-piercing would add meaningful depth (DoTs as reliable armor bypass). Currently `tickStatuses` bypasses `resolveIncomingDamage`, so ticks ignore Armor. Resolve this before ticks and `resolveIncomingDamage` are considered settled.

@@ -12,7 +12,7 @@
 - [x] Skill resolution: look up `effectId` in registry, call effect function with targets
 - [x] Support resolution: tag compatibility filter, apply `multiplicative` and `additive` modifications to skill output (`changeBehavior` and `reduceCost` deferred)
 - [x] Status effect system: apply/stack Burn, Bleed, Weaken, Armor; per-turn tick logic
-- [ ] Enemy model: enemy data structure, intent cycling, enemy action resolution
+- [x] Enemy model: enemy data structure, intent cycling, enemy action resolution
 - [ ] First card set: 3–5 skill effects in registry + card data objects, 2–3 supports
 - [ ] First enemy set: 3 enemies with hp, intent cycles, for the first location
 - [ ] Node map generation: branching path structure, node types (combat, elite, shop, rest, boss), boss placement
