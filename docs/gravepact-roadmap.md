@@ -15,7 +15,7 @@
 - [x] Enemy model: enemy data structure, intent cycling, enemy action resolution
 - [x] First card set: 3–5 skill effects in registry + card data objects, 2–3 supports
 - [x] First enemy set: 3 enemies with hp, intent cycles, for the first location
-- [ ] Node map generation: branching path structure, node types (combat, elite, shop, rest, boss), boss placement
+- [x] Node map generation: branching path structure, node types (combat, elite, shop, rest, boss), boss placement
 - [ ] Post-combat reward: sample 3 cards (uniform, no rarity weighting yet), add chosen card to deck
 - [ ] Minimal combat UI: hand display, staging zone, energy pips, player/enemy health bars, enemy intent, Play Hand button, End Turn button
 - [ ] Minimal map UI: node rendering, available path highlighting, node selection

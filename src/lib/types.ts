@@ -57,7 +57,10 @@ export type Enemy = {
 
 // --- Entities ---
 
-export type MapNode = { id: string; name: string };
+export type NodeKind = "combat" | "elite" | "shop" | "rest" | "boss";
+export type MapNode = { id: string; kind: NodeKind; layer: number; connections: string[] };
+export type GeneratedMap = MapNode[];
+
 export type Upgrade = { id: string; name: string };
 export type CharacterClass = { id: string; name: string };
 
@@ -73,12 +76,18 @@ export type RunState = {
   deck: Card[];
   hand: Card[];
   discardPile: Card[];
+
   relics: RelicCard[];
   activeAuras: AuraCard[];
+
   playerHealth: number;
   playerMaxHealth: number;
   reservedEnergy: number;
+
+  map: GeneratedMap;
   visitedNodes: MapNode[];
+  currentNodeId: string | null;
+
   combat: CombatState | null;
 };
 export type MetaState = {

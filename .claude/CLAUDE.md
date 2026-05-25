@@ -83,6 +83,10 @@ For any non-trivial logic in `engine/` or `state/`, start with a failing test. S
 - Prefer specific assertions over broad ones — `toBe(1)` over `toEqual(entireStateObject)`.
 - Avoid asserting on implementation details. Test what the function returns, not how it does it internally.
 
+**Tests for non-deterministic functions:**
+
+Tests that cover randomized or generative logic (e.g. `generateMap`) must run the function multiple times internally to rule out flukes. Wrap the test body in a `for` loop (50 iterations is a good default). Do not rely on running the test suite multiple times externally — the loop must be inside the test itself.
+
 **Anti-patterns to avoid:**
 
 - Mutating the `gameState` singleton directly in tests — state bleeds between tests.
