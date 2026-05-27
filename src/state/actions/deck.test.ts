@@ -24,7 +24,7 @@ describe("deckActions", () => {
   });
 
   it("leaves state unchanged when drawing from an empty deck", () => {
-    const state = { ...store.gameState, run: { ...store.gameState.run } };
+    const state = { ...store.gameState, run: { ...store.gameState.run, deck: [] } };
     const result = drawCards(state, 1);
 
     expect(result.run.hand.length).toBe(0);
