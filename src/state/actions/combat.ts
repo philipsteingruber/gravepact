@@ -118,7 +118,8 @@ export const applySkillOutput = (state: GameState, skillOutput: SkillOutput): Ga
 
 export const resolveEnemyTurn = (state: GameState): GameState => {
   if (!state.run.combat) return state;
-  const intent = getCurrentEnemyIntent(state.run.combat.enemy);
+  const { enemy } = state.run.combat;
+  const intent = enemy.intents[enemy.intentIndex];
   return produce(state, (draft) => {
     const combat = draft.run.combat!;
     combat.enemy = tickStatuses(combat.enemy).enemy;
@@ -150,8 +151,3 @@ export const unstageCard = (state: GameState, stagedCard: Card): GameState => {
   });
 };
 
-// --- Helpers
-
-const getCurrentEnemyIntent = (enemy: Enemy) => {
-  return enemy.intents[enemy.intentIndex];
-};

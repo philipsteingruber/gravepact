@@ -2,7 +2,7 @@ import { skillCards } from "@/data/cards/skills";
 import { supportCards } from "@/data/cards/supports";
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "@/lib/constants";
 import { createMockEnemy } from "@/lib/test-helpers";
-import type { Card } from "@/lib/types";
+import type { Card, CombatState } from "@/lib/types";
 import { endTurn, playHand, resolveEnemyTurn, stageCard, startCombat, unstageCard } from "@/state/actions/combat";
 import { store } from "@/state/store";
 import { produce } from "immer";
@@ -49,6 +49,35 @@ export class CombatScene extends Phaser.Scene {
     super({ key: "COMBAT" });
   }
 
+  create() {
+    // Fallback for initializing scene with mock data for playtesting
+    if (!store.gameState.run.combat) {
+      store.gameState = startCombat(
+        store.gameState,
+        createMockEnemy({
+          statuses: [
+            { kind: "Burn", stacks: 2 },
+            { kind: "Bleed", stacks: 3 },
+            { kind: "Weaken", stacks: 3 },
+            { kind: "Armor", stacks: 5 },
+          ],
+        }),
+      );
+      store.gameState = produce(store.gameState, (draft) => {
+        draft.run.hand = [...skillCards.slice(0, 2), ...supportCards.slice(0, 2)];
+      });
+    }
+
+    const { run } = store.gameState;
+    const combat = run.combat!;
+
+    this.renderEnemyPanel(combat);
+    this.renderPlayerStatusPanel(run.playerHealth, run.playerMaxHealth, combat);
+    this.renderStagingZone(combat.stagedCards);
+    this.renderHandPanel(run.hand);
+    this.renderActionButtons(combat.stagedCards);
+  }
+
   private renderCard(x: number, y: number, card: Card, onClick: () => void) {
     this.add
       .rectangle(x, y, CARD_WIDTH, CARD_HEIGHT, card.kind === "support" ? 0x4a2d6e : 0x2d4a6e)
@@ -69,50 +98,23 @@ export class CombatScene extends Phaser.Scene {
       .setOrigin(0.5, 0);
   }
 
-  create() {
-    // Fallback for initializing scene with mock data for playtesting
-    if (!store.gameState.run.combat) {
-      store.gameState = startCombat(
-        store.gameState,
-        createMockEnemy({
-          statuses: [
-            { kind: "Burn", stacks: 2 },
-            { kind: "Bleed", stacks: 3 },
-            { kind: "Weaken", stacks: 3 },
-            { kind: "Armor", stacks: 5 },
-          ],
-        }),
-      );
-      store.gameState = produce(store.gameState, (draft) => {
-        draft.run.hand = [...skillCards.slice(0, 2), ...supportCards.slice(0, 2)];
-      });
-    }
-
-    const combat = store.gameState.run.combat!;
-
-    const enemy = combat.enemy;
+  private renderEnemyPanel(combat: CombatState) {
+    const { enemy } = combat;
     const intent = enemy.intents[enemy.intentIndex];
     const armor = enemy.statuses.find((status) => status.kind === "Armor");
 
-    const hand = store.gameState.run.hand;
-    const stagedCards = combat.stagedCards!;
-
-    // --- ENEMY PANEL ---
     this.add.rectangle(0, 0, SCREEN_WIDTH, ENEMY_PANEL_HEIGHT, ENEMY_PANEL_FILL_COLOR).setOrigin(0, 0);
-
-    this.add.text(SCREEN_WIDTH / 2, ENEMY_PANEL_HEIGHT / 5, `${enemy.name}`).setOrigin(0.5, 0);
+    this.add.text(SCREEN_WIDTH / 2, ENEMY_PANEL_HEIGHT / 5, enemy.name).setOrigin(0.5, 0);
     this.add.text(SCREEN_WIDTH / 2, ENEMY_PANEL_HEIGHT / 5 + 20, `${enemy.hp}/${enemy.maxHp} HP`).setOrigin(0.5, 0);
     this.add.text(SCREEN_WIDTH / 2, ENEMY_PANEL_HEIGHT / 5 + 40, armor ? `🛡️${armor.stacks}` : "").setOrigin(0.5, 0);
     this.add
       .text(
         SCREEN_WIDTH / 2,
         ENEMY_PANEL_HEIGHT / 5 + 80,
-        `${enemy.statuses
+        enemy.statuses
           .filter((status) => status.kind !== "Armor")
-          .map((status) => {
-            return `${status.kind === "Bleed" ? "🩸" : status.kind === "Burn" ? "🔥" : "🌀"}${status.stacks}`;
-          })
-          .join(" ")}`,
+          .map((status) => `${status.kind === "Bleed" ? "🩸" : status.kind === "Burn" ? "🔥" : "🌀"}${status.stacks}`)
+          .join(" "),
       )
       .setOrigin(0.5, 0);
     this.add
@@ -122,28 +124,23 @@ export class CombatScene extends Phaser.Scene {
         `${intent.kind === "attack" ? "⚔️" : intent.kind === "defend" ? "🛡️" : "✨"}${intent.kind === "attack" ? intent.damage : intent.kind === "defend" ? intent.amount : ""}`,
       )
       .setOrigin(0.5, 0);
+  }
 
-    // --- PLAYER STATUS PANEL ---
+  private renderPlayerStatusPanel(playerHealth: number, playerMaxHealth: number, combat: CombatState) {
     this.add.rectangle(0, playerStatusY, SCREEN_WIDTH, PLAYER_STATUS_PANEL_HEIGHT, PLAYER_STATUS_PANEL_FILL_COLOR).setOrigin(0, 0);
-
     this.add
-      .text(
-        20,
-        playerStatusY + PLAYER_STATUS_PANEL_HEIGHT / 2,
-        `❤️ ${store.gameState.run.playerHealth}/${store.gameState.run.playerMaxHealth} HP`,
-      )
+      .text(20, playerStatusY + PLAYER_STATUS_PANEL_HEIGHT / 2, `❤️ ${playerHealth}/${playerMaxHealth} HP`)
       .setOrigin(0, 0.5);
 
     const energyPips = "◆".repeat(combat.energyRemaining) + "◇".repeat(combat.energyMax - combat.energyRemaining);
     this.add.text(SCREEN_WIDTH - 20, playerStatusY + PLAYER_STATUS_PANEL_HEIGHT / 2, energyPips).setOrigin(1, 0.5);
+  }
 
-    // --- STAGING ZONE PANEL ---
+  private renderStagingZone(stagedCards: Card[]) {
     this.add.rectangle(0, stagingZoneY, SCREEN_WIDTH, STAGING_ZONE_PANEL_HEIGHT, STAGING_ZONE_PANEL_FILL_COLOR).setOrigin(0, 0);
 
     if (stagedCards.length === 0) {
-      this.add
-        .text(SCREEN_WIDTH / 2, stagingZoneY + STAGING_ZONE_PANEL_HEIGHT / 2, `${stagedCards.length === 0 ? "No cards staged" : ""}`)
-        .setOrigin(0.5, 0.5);
+      this.add.text(SCREEN_WIDTH / 2, stagingZoneY + STAGING_ZONE_PANEL_HEIGHT / 2, "No cards staged").setOrigin(0.5, 0.5);
     } else {
       const totalWidth = stagedCards.length * CARD_WIDTH + (stagedCards.length - 1) * CARD_SPACING;
       const startX = (SCREEN_WIDTH - totalWidth) / 2;
@@ -155,8 +152,9 @@ export class CombatScene extends Phaser.Scene {
         });
       });
     }
+  }
 
-    // --- HAND PANEL ---
+  private renderHandPanel(hand: Card[]) {
     this.add.rectangle(0, handAreaY, SCREEN_WIDTH, HAND_AREA_PANEL_HEIGHT, HAND_AREA_PANEL_FILL_COLOR).setOrigin(0, 0);
 
     const totalWidth = hand.length * CARD_WIDTH + (hand.length - 1) * CARD_SPACING;
@@ -168,8 +166,9 @@ export class CombatScene extends Phaser.Scene {
         this.scene.restart();
       });
     });
+  }
 
-    // --- ACTION BUTTONS PANEL ---
+  private renderActionButtons(stagedCards: Card[]) {
     this.add.rectangle(0, actionButtonsY, SCREEN_WIDTH, ACTION_BUTTONS_PANEL_HEIGHT, ACTION_BUTTONS_PANEL_FILL_COLOR).setOrigin(0, 0);
 
     const buttonOffset = 100;
@@ -177,7 +176,6 @@ export class CombatScene extends Phaser.Scene {
     const buttonWidth = 140;
 
     const isHandValid = stagedCards.filter((card) => card.kind === "skill" || card.kind === "aura").length === 1;
-
     const playHandButtonColor = isHandValid ? PLAY_HAND_BUTTON_COLOR : PLAY_HAND_BUTTON_DISABLED_COLOR;
 
     const playHandButton = this.add
@@ -195,7 +193,6 @@ export class CombatScene extends Phaser.Scene {
       .on("pointerout", () => playHandButton.setFillStyle(playHandButtonColor))
       .on("pointerdown", () => {
         if (!isHandValid) return;
-
         store.gameState = playHand(store.gameState);
         this.scene.restart();
       });
