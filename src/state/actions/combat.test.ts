@@ -6,13 +6,14 @@ import { initialCombatState } from "../combat-state";
 import { store } from "../store";
 import {
   applySkillOutput,
-  commitHand,
+  playHand,
   drawHand,
   endCombat,
   endTurn,
-  playCard,
   resolveEnemyTurn,
+  stageCard,
   startCombat,
+  unstageCard,
 } from "./combat";
 
 describe("combatActions", () => {
@@ -68,7 +69,7 @@ describe("combatActions", () => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
       });
 
-      state = playCard(state, mockCard);
+      state = stageCard(state, mockCard);
 
       expect(state.run.hand.length).toBe(0);
       expect(state.run.combat?.stagedCards).toEqual([mockCard]);
@@ -82,13 +83,13 @@ describe("combatActions", () => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
       });
 
-      state = playCard(state, mockCard);
+      state = stageCard(state, mockCard);
 
       expect(state.run.combat?.energyRemaining).toBe(BASE_MAX_ENERGY - 1);
     });
   });
 
-  describe("commitHand", () => {
+  describe("playHand", () => {
     it("moves all staged cards to an empty discard pile", () => {
       const mockCard = createMockSkillCard();
       let state = produce(store.gameState, (draft) => {
@@ -96,7 +97,7 @@ describe("combatActions", () => {
         draft.run.combat.stagedCards = [mockCard];
       });
 
-      state = commitHand(state);
+      state = playHand(state);
 
       expect(state.run.combat?.stagedCards).toEqual([]);
       expect(state.run.discardPile).toEqual([mockCard]);
@@ -110,7 +111,7 @@ describe("combatActions", () => {
         draft.run.discardPile = [mockCard];
       });
 
-      state = commitHand(state);
+      state = playHand(state);
 
       expect(state.run.combat?.stagedCards).toEqual([]);
       expect(state.run.discardPile).toEqual([mockCard, mockCard]);
@@ -129,7 +130,7 @@ describe("combatActions", () => {
         };
       });
 
-      state = commitHand(state);
+      state = playHand(state);
 
       expect(state.run.combat?.enemy.hp).toBe(2);
     });
@@ -141,7 +142,7 @@ describe("combatActions", () => {
         draft.run.combat.stagedCards = [mockCard];
       });
 
-      const modifiedState = commitHand(originalState);
+      const modifiedState = playHand(originalState);
 
       expect(modifiedState).toEqual(originalState);
     });
@@ -153,7 +154,7 @@ describe("combatActions", () => {
         draft.run.combat.stagedCards = [mockCard];
       });
 
-      const modifiedState = commitHand(originalState);
+      const modifiedState = playHand(originalState);
 
       expect(modifiedState).toEqual(originalState);
     });
@@ -165,7 +166,7 @@ describe("combatActions", () => {
         effect: { kind: "multiplicative", multiplier: 1.5 },
       });
 
-      const state = commitHand(
+      const state = playHand(
         produce({ ...store.gameState }, (draft) => {
           draft.run.combat = {
             ...initialCombatState,
@@ -469,6 +470,64 @@ describe("combatActions", () => {
       state = resolveEnemyTurn(state);
 
       expect(state.run.combat!.enemy.intentIndex).toBe(0);
+    });
+  });
+
+  describe("unstageCard", () => {
+    it("moves the card from stagedCards to hand", () => {
+      const card = createMockSkillCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
+        draft.run.combat!.stagedCards = [card];
+        draft.run.hand = [];
+      });
+
+      state = unstageCard(state, card);
+
+      expect(state.run.combat?.stagedCards).toEqual([]);
+      expect(state.run.hand).toEqual([card]);
+    });
+
+    it("refunds the energy cost of the unstaged card", () => {
+      const card = createMockSkillCard({ energyCost: 1 });
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = { ...initialCombatState, enemy: createMockEnemy(), energyRemaining: 2 };
+        draft.run.combat!.stagedCards = [card];
+        draft.run.hand = [];
+      });
+
+      state = unstageCard(state, card);
+
+      expect(state.run.combat?.energyRemaining).toBe(3);
+    });
+
+    it("returns state unchanged when the card is not in stagedCards", () => {
+      const stagedCard = createMockSkillCard();
+      const nonStagedCard = createMockSupportCard();
+
+      const state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = { ...initialCombatState, enemy: createMockEnemy(), energyRemaining: 2 };
+        draft.run.combat!.stagedCards = [stagedCard];
+        draft.run.hand = [];
+      });
+
+      const updatedState = unstageCard(state, nonStagedCard);
+
+      expect(updatedState).toEqual(state);
+    });
+
+    it("returns state unchanged when combat is null", () => {
+      const stagedCard = createMockSkillCard();
+
+      const state = produce({ ...store.gameState }, (draft) => {
+        draft.run.hand = [];
+      });
+
+      const updatedState = unstageCard(state, stagedCard);
+
+      expect(updatedState).toEqual(state);
     });
   });
 });

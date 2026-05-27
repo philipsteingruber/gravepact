@@ -17,7 +17,7 @@
 - [x] First enemy set: 3 enemies with hp, intent cycles, for the first location
 - [x] Node map generation: branching path structure, node types (combat, elite, shop, rest, boss), boss placement
 - [ ] Post-combat reward: sample 3 cards (uniform, no rarity weighting yet), add chosen card to deck
-- [ ] Minimal combat UI: hand display, staging zone, energy pips, player/enemy health bars, enemy intent, Play Hand button, End Turn button
+- [x] Minimal combat UI: hand display, staging zone, energy pips, player/enemy health bars (text only), enemy intent, Play Hand button, End Turn button
 - [ ] Minimal map UI: node rendering, available path highlighting, node selection
 
 ## Phase 2 — Full Card System
@@ -51,6 +51,7 @@
 
 - [ ] UI design session: visual language, card presentation, combat feedback
 - [ ] UI implementation based on design
+- [ ] Health bars: replace HP text with graphical bars for player and enemy
 - [ ] Location theming: distinct palette and node flavor per location
 - [ ] Second location: new enemy pool, boss, themed map
 - [ ] Animated card play and status effect feedback

@@ -33,13 +33,13 @@ export const drawHand = (state: GameState) => {
   return state;
 };
 
-export const playCard = (state: GameState, card: Card) => {
+export const stageCard = (state: GameState, card: Card) => {
   if (!state.run.hand.includes(card) || !state.run.combat) return state;
 
   return produce(state, (draft) => {
     const combat = draft.run.combat!;
 
-    if ("energyCost" in card) {
+    if (card.kind !== "aura") {
       combat.energyRemaining -= card.energyCost;
     }
 
@@ -49,11 +49,8 @@ export const playCard = (state: GameState, card: Card) => {
   });
 };
 
-export const commitHand = (state: GameState) => {
-  if (
-    !state.run.combat ||
-    state.run.combat.stagedCards.filter((card) => card.kind === "aura" || card.kind === "skill").length !== 1
-  )
+export const playHand = (state: GameState) => {
+  if (!state.run.combat || state.run.combat.stagedCards.filter((card) => card.kind === "aura" || card.kind === "skill").length !== 1)
     return state;
 
   const combat = state.run.combat!;
@@ -89,6 +86,8 @@ export const endTurn = (state: GameState) => {
 
   state = produce(state, (draft) => {
     const combat = draft.run.combat!;
+    draft.run.hand.push(...combat.stagedCards);
+    combat.stagedCards = [];
     draft.run.discardPile.push(...draft.run.hand);
     draft.run.hand = [];
     combat.energyRemaining = combat.energyMax - draft.run.reservedEnergy;
@@ -137,6 +136,21 @@ export const resolveEnemyTurn = (state: GameState): GameState => {
     combat.enemy.intentIndex = (combat.enemy.intentIndex + 1) % combat.enemy.intents.length;
   });
 };
+
+export const unstageCard = (state: GameState, stagedCard: Card): GameState => {
+  if (!state.run.combat || !state.run.combat.stagedCards.includes(stagedCard)) return state;
+
+  return produce(state, (draft) => {
+    const combat = draft.run.combat!;
+    const index = combat.stagedCards.findIndex((card) => card === stagedCard);
+
+    combat.stagedCards.splice(index, 1);
+    draft.run.hand.push(stagedCard);
+    combat.energyRemaining += stagedCard.kind === "aura" ? stagedCard.energyReservation : stagedCard.energyCost;
+  });
+};
+
+// --- Helpers
 
 const getCurrentEnemyIntent = (enemy: Enemy) => {
   return enemy.intents[enemy.intentIndex];

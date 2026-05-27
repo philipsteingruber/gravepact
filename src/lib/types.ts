@@ -3,7 +3,7 @@
 import type { EffectId } from "@/engine/effects";
 
 export type SkillTag = "Attack" | "Spell" | "Curse" | "Block" | "Summon";
-export type CardRarity = "Common" | "Uncommon" | "Rare";
+export type RewardRarity = "Common" | "Uncommon" | "Rare";
 export type StatusEffectKind = "Bleed" | "Weaken" | "Burn" | "Armor";
 
 // --- Status Effects ---
@@ -34,9 +34,10 @@ export type SupportCard = {
   energyCost: number;
 };
 export type AuraCard = { kind: "aura"; effectId: string; energyReservation: number };
-export type RelicCard = { kind: "relic"; effectId: string };
 
-export type Card = { id: string; name: string; rarity: CardRarity } & (SkillCard | SupportCard | AuraCard | RelicCard);
+export type Card = { id: string; name: string; rarity: RewardRarity } & (SkillCard | SupportCard | AuraCard);
+
+export type Relic = { id: string; name: string; rarity: RewardRarity; effectId: string };
 
 // --- Enemies ---
 
@@ -77,7 +78,7 @@ export type RunState = {
   hand: Card[];
   discardPile: Card[];
 
-  relics: RelicCard[];
+  relics: Relic[];
   activeAuras: AuraCard[];
 
   playerHealth: number;

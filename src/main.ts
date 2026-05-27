@@ -9,6 +9,7 @@ import { RewardScene } from "./scenes/reward";
 new Phaser.Game({
   width: SCREEN_WIDTH,
   height: SCREEN_HEIGHT,
+  backgroundColor: "#0d0d1a",
   type: Phaser.AUTO,
   scene: [BootScene, HubScene, MapScene, CombatScene, RewardScene],
 });
