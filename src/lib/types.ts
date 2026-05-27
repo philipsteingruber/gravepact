@@ -58,8 +58,7 @@ export type Enemy = {
 
 // --- Entities ---
 
-export type NodeKind = "combat" | "elite" | "shop" | "rest" | "boss";
-export type MapNode = { id: string; kind: NodeKind; layer: number; connections: string[] };
+export type MapNode = { id: string; kind: "combat" | "elite" | "shop" | "rest" | "boss"; layer: number; connections: string[]; assignedEnemyId?: string };
 export type GeneratedMap = MapNode[];
 
 export type Upgrade = { id: string; name: string };

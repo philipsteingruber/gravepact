@@ -18,7 +18,7 @@
 - [x] Node map generation: branching path structure, node types (combat, elite, shop, rest, boss), boss placement
 - [ ] Post-combat reward: sample 3 cards (uniform, no rarity weighting yet), add chosen card to deck
 - [x] Minimal combat UI: hand display, staging zone, energy pips, player/enemy health bars (text only), enemy intent, Play Hand button, End Turn button
-- [ ] Minimal map UI: node rendering, available path highlighting, node selection
+- [x] Minimal map UI: node rendering, available path highlighting, node selection
 
 ## Phase 2 — Full Card System
 
@@ -43,7 +43,7 @@
 - [ ] LocalStorage persistence: save/load `MetaState` on run end and hub entry
 - [ ] Card pool unlock: spend Orbs to add cards to the general pool
 - [ ] Passive upgrade tree: 15–20 nodes with small run-wide bonuses
-- [ ] Archetype system: starter deck definitions, archetype selection at run start
+- [ ] Archetype system: starter deck definitions, archetype selection at run start — replace hardcoded deck in `initialRunState`
 - [ ] Second archetype: unlock via milestone (e.g. first boss kill)
 - [ ] Hub scene: start run, spend Orbs, view unlocks — three distinct screens
 
@@ -67,3 +67,5 @@
 - [ ] Boss variety: unique mechanics per location boss
 - [ ] Run modifiers / curses (harder run options for better rewards)
 - [ ] Cloud save / account-based persistence
+- [ ] Extract `enterNode` action from `MapScene` — move enemy-picking and combat-init logic out of the scene
+- [ ] Mouse panning on map

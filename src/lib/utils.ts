@@ -8,3 +8,17 @@ export const pickRandom = <T>(arr: T[], count: number): T[] => {
   }
   return shuffled.slice(0, count);
 };
+
+export const shuffle = <T>(arr: T[]): T[] => {
+  if (arr.length === 0) return arr;
+  let currentIndex = arr.length;
+
+  while (currentIndex != 0) {
+    const randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    [arr[currentIndex], arr[randomIndex]] = [arr[randomIndex], arr[currentIndex]];
+  }
+
+  return arr;
+};

@@ -70,6 +70,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   create() {
+    // Fallback for initializing scene with mock data for playtesting
     if (!store.gameState.run.combat) {
       store.gameState = startCombat(
         store.gameState,
@@ -175,7 +176,7 @@ export class CombatScene extends Phaser.Scene {
     const buttonHeight = 40;
     const buttonWidth = 140;
 
-    const isHandValid = stagedCards.some((card) => card.kind === "skill" || card.kind === "aura");
+    const isHandValid = stagedCards.filter((card) => card.kind === "skill" || card.kind === "aura").length === 1;
 
     const playHandButtonColor = isHandValid ? PLAY_HAND_BUTTON_COLOR : PLAY_HAND_BUTTON_DISABLED_COLOR;
 
@@ -217,14 +218,5 @@ export class CombatScene extends Phaser.Scene {
         this.scene.restart();
       });
     this.add.text(SCREEN_WIDTH / 2 + buttonOffset, actionButtonsY + ACTION_BUTTONS_PANEL_HEIGHT / 2, "End Turn").setOrigin(0.5, 0.5);
-    /*
-    this.add.text(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, "Combat Scene", { align: "center", color: "#ff0000" });
-    const nextButton = this.add
-      .text(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 25, "Next")
-      .setInteractive()
-      .on("pointerover", () => nextButton.setStyle({ color: "#ffff00" }))
-      .on("pointerout", () => nextButton.setStyle({ color: "#ffffff" }))
-      .on("pointerdown", () => this.scene.start("REWARD"));
-    */
   }
 }

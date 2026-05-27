@@ -1,4 +1,4 @@
-import type { AuraCard, Card, Enemy, SkillCard, SupportCard } from "./types";
+import type { AuraCard, Card, Enemy, MapNode, SkillCard, SupportCard } from "./types";
 
 export const createMockEnemy = (overrides?: Partial<Enemy>): Enemy => {
   return {
@@ -48,6 +48,17 @@ export const createMockAuraCard = (overrides?: Partial<AuraCard>): Card => {
     rarity: "Common",
     effectId: "test-aura",
     energyReservation: 1,
+    ...overrides,
+  };
+};
+
+export const createMockMapNode = (overrides?: Partial<MapNode>): MapNode => {
+  return {
+    kind: "combat",
+    id: "mock_node",
+    connections: [],
+    layer: 0,
+    assignedEnemyId: undefined,
     ...overrides,
   };
 };

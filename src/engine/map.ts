@@ -1,23 +1,23 @@
 import {
-  MIN_ELITE_LAYER,
   MAX_ELITE_COUNT,
   MAX_LAYERS_PER_MAP,
   MAX_REST_COUNT,
   MAX_SHOP_COUNT,
   MAX_SPECIAL_NODE_LAYER,
   MIN_ELITE_COUNT,
+  MIN_ELITE_LAYER,
   MIN_LAYERS_PER_MAP,
   MIN_REST_COUNT,
   MIN_SHOP_COUNT,
   MIN_SPECIAL_NODE_LAYER,
 } from "@/lib/constants";
-import type { GeneratedMap } from "@/lib/types";
+import type { Enemy, GeneratedMap } from "@/lib/types";
 import { pickRandom, randomBetween } from "@/lib/utils";
 
-export const generateMap = (): GeneratedMap => {
+export const generateMap = (enemyPool: Enemy[], bossPool: Enemy[]): GeneratedMap => {
   const layersCount = randomBetween(MIN_LAYERS_PER_MAP, MAX_LAYERS_PER_MAP);
 
-  const generatedMap = generateNodes(layersCount);
+  const generatedMap = generateNodes(layersCount, bossPool);
 
   let groupedByLayer = groupNodesByLayer(generatedMap);
   assignConnections(groupedByLayer, layersCount);
@@ -26,33 +26,47 @@ export const generateMap = (): GeneratedMap => {
   groupedByLayer = groupNodesByLayer(generatedMap);
   ensureFullCoverage(groupedByLayer, layersCount);
 
-  assignNodeTypes(generatedMap);
+  assignNodeTypes(generatedMap, enemyPool);
 
   return generatedMap;
 };
 
 // --- Node Generation Functions
 
-const generateNodes = (layersCount: number): GeneratedMap => {
+const generateNodes = (layersCount: number, bossPool: Enemy[]): GeneratedMap => {
   const generatedMap: GeneratedMap = [];
   let generatedNodes = 0;
 
   for (let i = 0; i < layersCount - 1; i++) {
-    generatedMap.push({ id: generatedNodes.toString(), connections: [], kind: "combat", layer: i });
-    generatedMap.push({ id: (generatedNodes + 1).toString(), connections: [], kind: "combat", layer: i });
-    generatedNodes += 2;
+    for (let j = 0; j < randomBetween(2, 3); j++) {
+      generatedMap.push({ id: generatedNodes.toString(), connections: [], kind: "combat", layer: i });
+      generatedNodes += 1;
+    }
   }
-  generatedMap.push({ id: generatedNodes.toString(), connections: [], kind: "boss", layer: layersCount - 1 });
+  generatedMap.push({
+    id: generatedNodes.toString(),
+    connections: [],
+    kind: "boss",
+    layer: layersCount - 1,
+    assignedEnemyId: pickRandom(bossPool, 1)[0].id,
+  });
 
   return generatedMap;
 };
 
 const assignConnections = (groupedByLayer: ReturnType<typeof groupNodesByLayer>, layersCount: number) => {
-  for (let i = 0; i < layersCount - 1; i++) {
-    const nodesInLayer = groupedByLayer[i];
-    nodesInLayer.forEach((node) => {
-      const numConnections = randomBetween(1, 2);
-      node.connections = pickRandom(groupedByLayer[i + 1], numConnections).map((node) => node.id);
+  for (let layer = 0; layer < layersCount - 1; layer++) {
+    const sourceNodes = groupedByLayer[layer];
+    const n = sourceNodes.length;
+    const targetNodes = groupedByLayer[layer + 1];
+    const m = targetNodes.length;
+
+    sourceNodes.forEach((sourceNode, sourceIndex) => {
+      const windowStart = Math.floor((sourceIndex * m) / n);
+      const windowEnd = Math.floor(((sourceIndex + 1) * m) / n) + 1;
+
+      const candidates = targetNodes.slice(windowStart, windowEnd);
+      sourceNode.connections = pickRandom(candidates, randomBetween(1, Math.min(2, windowEnd - windowStart))).map((node) => node.id);
     });
   }
 };
@@ -60,6 +74,9 @@ const assignConnections = (groupedByLayer: ReturnType<typeof groupNodesByLayer>,
 // Random connection assignment can leave later-layer nodes with no incoming connection (unreachable)
 const ensureFullCoverage = (groupedByLayer: ReturnType<typeof groupNodesByLayer>, layersCount: number) => {
   for (let i = 1; i < layersCount; i++) {
+    const n = groupedByLayer[i - 1].length;
+    const m = groupedByLayer[i].length;
+
     const nodesWithIncomingConnection = new Set(
       groupedByLayer[i].reduce((acc, node) => {
         if (groupedByLayer[i - 1].some((previousLayerNode) => previousLayerNode.connections.includes(node.id))) {
@@ -69,32 +86,33 @@ const ensureFullCoverage = (groupedByLayer: ReturnType<typeof groupNodesByLayer>
       }, [] as string[]),
     );
 
-    const nodesWithoutIncomingConnections = groupedByLayer[i].filter(
-      (node) => !nodesWithIncomingConnection.has(node.id),
-    );
+    const nodesWithoutIncomingConnections = groupedByLayer[i].filter((node) => !nodesWithIncomingConnection.has(node.id));
 
     nodesWithoutIncomingConnections.forEach((node) => {
-      const nodeToAddConnectionTo = pickRandom(groupedByLayer[i - 1], 1)[0];
+      const k = groupedByLayer[node.layer].findIndex((n) => n.id === node.id);
+      const sourceIndex = Math.min(n - 1, Math.floor((k * n) / m));
+
+      const nodeToAddConnectionTo = groupedByLayer[i - 1][sourceIndex];
       nodeToAddConnectionTo.connections.push(node.id);
     });
   }
 };
 
-const assignNodeTypes = (generatedMap: GeneratedMap) => {
+const assignNodeTypes = (generatedMap: GeneratedMap, enemyPool: Enemy[]) => {
   const candidates = generatedMap.filter((node) => node.kind !== "boss");
   const reassignedCandidates: Set<string> = new Set();
 
   // Elites
   const eliteCandidates = candidates.filter((node) => node.layer >= MIN_ELITE_LAYER);
-  pickRandom(eliteCandidates, randomBetween(MIN_ELITE_COUNT, MAX_ELITE_COUNT)).forEach((node) => {
-    node.kind = "elite";
-    reassignedCandidates.add(node.id);
+  pickRandom(eliteCandidates, randomBetween(MIN_ELITE_COUNT, MAX_ELITE_COUNT)).forEach((candidateNode) => {
+    const index = generatedMap.findIndex((node) => node.id === candidateNode.id);
+    generatedMap[index] = { ...candidateNode, kind: "elite", assignedEnemyId: pickRandom(enemyPool, 1)[0].id };
+    reassignedCandidates.add(candidateNode.id);
   });
 
   // Shops
   const shopCandidates = candidates.filter(
-    (node) =>
-      node.layer >= MIN_SPECIAL_NODE_LAYER && node.layer <= MAX_SPECIAL_NODE_LAYER && !reassignedCandidates.has(node.id),
+    (node) => node.layer >= MIN_SPECIAL_NODE_LAYER && node.layer <= MAX_SPECIAL_NODE_LAYER && !reassignedCandidates.has(node.id),
   );
   pickRandom(shopCandidates, randomBetween(MIN_SHOP_COUNT, MAX_SHOP_COUNT)).forEach((node) => {
     node.kind = "shop";
@@ -103,8 +121,7 @@ const assignNodeTypes = (generatedMap: GeneratedMap) => {
 
   // Rest Sites
   const restCandidates = candidates.filter(
-    (node) =>
-      node.layer >= MIN_SPECIAL_NODE_LAYER && node.layer <= MAX_SPECIAL_NODE_LAYER && !reassignedCandidates.has(node.id),
+    (node) => node.layer >= MIN_SPECIAL_NODE_LAYER && node.layer <= MAX_SPECIAL_NODE_LAYER && !reassignedCandidates.has(node.id),
   );
   pickRandom(restCandidates, randomBetween(MIN_REST_COUNT, MAX_REST_COUNT)).forEach((node) => {
     node.kind = "rest";
@@ -114,8 +131,7 @@ const assignNodeTypes = (generatedMap: GeneratedMap) => {
 
 // --- Helpers ---
 
-export const calculateLayersCount = (generatedMap: GeneratedMap) =>
-  Array.from(new Set(generatedMap.map((node) => node.layer))).length;
+export const calculateLayersCount = (generatedMap: GeneratedMap) => Array.from(new Set(generatedMap.map((node) => node.layer))).length;
 
 export const calculateMaxLayer = (generatedMap: GeneratedMap) => Math.max(...generatedMap.map((node) => node.layer));
 
@@ -129,5 +145,4 @@ export const groupNodesByLayer = (generatedMap: GeneratedMap) =>
     {} as Record<number, GeneratedMap>,
   );
 
-export const getAllConnections = (generatedMap: GeneratedMap) =>
-  new Set(generatedMap.flatMap((node) => node.connections));
+export const getAllConnections = (generatedMap: GeneratedMap) => new Set(generatedMap.flatMap((node) => node.connections));

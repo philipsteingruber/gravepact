@@ -1,4 +1,5 @@
 import { MAX_REST_COUNT, MIN_REST_COUNT } from "@/lib/constants";
+import type { Enemy } from "@/lib/types";
 import { calculateLayersCount, calculateMaxLayer, generateMap, getAllConnections, groupNodesByLayer } from "./map";
 
 const ITERATIONS = 50;
@@ -6,11 +7,20 @@ const repeat = (fn: () => void) => {
   for (let i = 0; i < ITERATIONS; i++) fn();
 };
 
+const enemies: Enemy[] = [
+  { id: "enemy1", name: "Enemy1", maxHp: 1, hp: 1, intents: [{ kind: "attack", damage: 5 }], intentIndex: 0, statuses: [] },
+  { id: "enemy2", name: "Enemy2", maxHp: 2, hp: 2, intents: [{ kind: "attack", damage: 5 }], intentIndex: 0, statuses: [] },
+  { id: "enemy3", name: "Enemy3", maxHp: 3, hp: 3, intents: [{ kind: "attack", damage: 5 }], intentIndex: 0, statuses: [] },
+];
+const bosses: Enemy[] = [
+  { id: "boss", name: "boss", maxHp: 1, hp: 1, intents: [{ kind: "attack", damage: 5 }], intentIndex: 0, statuses: [] },
+];
+
 describe("engine", () => {
   describe("generateMap", () => {
     it("returns a non-empty array", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         expect(generatedMap.length).toBeGreaterThan(0);
       });
@@ -18,7 +28,7 @@ describe("engine", () => {
 
     it("generates a map with 10-12 distinct layers", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const layersCount = calculateLayersCount(generatedMap);
 
@@ -29,7 +39,7 @@ describe("engine", () => {
 
     it("generates 2-3 nodes in every non-final layer", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const maxLayer = calculateMaxLayer(generatedMap);
         const nodesByLayer = groupNodesByLayer(generatedMap);
@@ -46,7 +56,7 @@ describe("engine", () => {
 
     it("generates exactly 1 node in the final layer", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const maxLayer = calculateMaxLayer(generatedMap);
 
@@ -56,7 +66,7 @@ describe("engine", () => {
 
     it("generates nodes that all have a unique ID", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const nodeIds = Array.from(new Set(generatedMap.map((node) => node.id)));
 
@@ -66,7 +76,7 @@ describe("engine", () => {
 
     it("generates a node on the last layer with kind: 'boss'", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const maxLayer = calculateMaxLayer(generatedMap);
 
@@ -74,9 +84,17 @@ describe("engine", () => {
       });
     });
 
+    it("assigns an enemy from the boss pool to the boss node", () => {
+      repeat(() => {
+        const generatedMap = generateMap(enemies, bosses);
+
+        expect(generatedMap.find((node) => node.kind === "boss")!.assignedEnemyId).toBe("boss");
+      });
+    });
+
     it("generates a node on the last layer with no connections", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const maxLayer = calculateMaxLayer(generatedMap);
 
@@ -86,7 +104,7 @@ describe("engine", () => {
 
     it("ensures all nodes on non-final layers have at least 1 connection", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const maxLayer = calculateMaxLayer(generatedMap);
         const nonBossNodes = generatedMap.filter((node) => node.layer !== maxLayer);
@@ -97,19 +115,17 @@ describe("engine", () => {
 
     it("ensures all connection targets reference existing node IDs", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const nodeIds = new Set(generatedMap.map((node) => node.id));
 
-        expect(generatedMap.every((node) => node.connections.every((connection) => nodeIds.has(connection)))).toBe(
-          true,
-        );
+        expect(generatedMap.every((node) => node.connections.every((connection) => nodeIds.has(connection)))).toBe(true);
       });
     });
 
     it("ensures every non-first-layer node has at least one incoming connection", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const allConnections = getAllConnections(generatedMap);
         const nonFirstLayerNodes = generatedMap.filter((node) => node.layer !== 0);
@@ -120,7 +136,7 @@ describe("engine", () => {
 
     it("only generates elite encounters in layer 6 or later", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const eliteNodes = generatedMap.filter((node) => node.kind === "elite");
 
@@ -128,9 +144,19 @@ describe("engine", () => {
       });
     });
 
+    it("assigns an enemyId from the pool to every elite node", () => {
+      repeat(() => {
+        const generatedMap = generateMap(enemies, bosses);
+
+        const eliteNodes = generatedMap.filter((node) => node.kind === "elite");
+
+        expect(eliteNodes.every((node) => !!node.assignedEnemyId)).toBe(true);
+      });
+    });
+
     it("only generates shop encounters in layers 3-8", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const shopEncounters = generatedMap.filter((node) => node.kind === "shop");
 
@@ -140,7 +166,7 @@ describe("engine", () => {
 
     it("only generates rest encounters in layers 3-8", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const shopEncounters = generatedMap.filter((node) => node.kind === "rest");
 
@@ -150,7 +176,7 @@ describe("engine", () => {
 
     it("generates 2-3 elite encounters in every map", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const eliteNodes = generatedMap.filter((node) => node.kind === "elite");
 
@@ -161,7 +187,7 @@ describe("engine", () => {
 
     it("generates MIN_REST_COUNT-MAX_REST_COUNT rest encounters in every map", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const restNodes = generatedMap.filter((node) => node.kind === "rest");
 
@@ -172,12 +198,37 @@ describe("engine", () => {
 
     it("generates 2-3 shop encounters in every map", () => {
       repeat(() => {
-        const generatedMap = generateMap();
+        const generatedMap = generateMap(enemies, bosses);
 
         const shopNodes = generatedMap.filter((node) => node.kind === "shop");
 
         expect(shopNodes.length).toBeGreaterThanOrEqual(2);
         expect(shopNodes.length).toBeLessThanOrEqual(3);
+      });
+    });
+
+    it("generates non-crossing connections between layers", () => {
+      repeat(() => {
+        const generatedMap = generateMap(enemies, bosses);
+
+        const groupedByLayer = groupNodesByLayer(generatedMap);
+        const maxLayer = calculateMaxLayer(generatedMap);
+
+        for (let layer = 0; layer < maxLayer; layer++) {
+          const sourceNodes = groupedByLayer[layer];
+          const targetNodes = groupedByLayer[layer + 1];
+
+          const targetPosition: Record<string, number> = {};
+          targetNodes.forEach((node, index) => {
+            targetPosition[node.id] = index;
+          });
+
+          for (let i = 0; i < sourceNodes.length - 1; i++) {
+            const maxTargetI = Math.max(...sourceNodes[i].connections.map((c) => targetPosition[c]));
+            const minTargetJ = Math.min(...sourceNodes[i + 1].connections.map((c) => targetPosition[c]));
+            expect(maxTargetI).toBeLessThanOrEqual(minTargetJ);
+          }
+        }
       });
     });
   });

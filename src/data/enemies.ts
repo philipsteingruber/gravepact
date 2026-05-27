@@ -40,3 +40,20 @@ export const enemies: Enemy[] = [
     ...defaultFields,
   },
 ];
+
+export const bosses: Enemy[] = [
+  {
+    id: "bloated_king",
+    name: "The Bloated King",
+    hp: 80, // flagged for playtesting
+    maxHp: 80,
+    intents: [
+      { kind: "attack", damage: 8 },
+      { kind: "defend", amount: 10 },
+      { kind: "attack", damage: 14 },
+      { kind: "debuff", effectKind: "Bleed", stacks: 4 },
+      { kind: "attack", damage: 10 },
+    ],
+    ...defaultFields,
+  },
+];
