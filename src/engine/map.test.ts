@@ -1,6 +1,7 @@
 import { MAX_REST_COUNT, MIN_REST_COUNT } from "@/lib/constants";
-import type { Enemy } from "@/lib/types";
-import { calculateLayersCount, calculateMaxLayer, generateMap, getAllConnections, groupNodesByLayer } from "./map";
+import { createMockMapNode } from "@/lib/test-helpers";
+import type { Enemy, MapNode } from "@/lib/types";
+import { calculateLayersCount, calculateMaxLayer, generateMap, getAllConnections, getNode, groupNodesByLayer } from "./map";
 
 const ITERATIONS = 50;
 const repeat = (fn: () => void) => {
@@ -17,6 +18,22 @@ const bosses: Enemy[] = [
 ];
 
 describe("engine", () => {
+  describe("getNode", () => {
+    it("returns the node with the matching id", () => {
+      const nodes: MapNode[] = [createMockMapNode({ id: "1" }), createMockMapNode({ id: "2" }), createMockMapNode({ id: "3" })];
+
+      const result = getNode(nodes, "1");
+
+      expect(result).toEqual(nodes[0]);
+    });
+
+    it("throws when no node with that ID exists", () => {
+      const nodes: MapNode[] = [];
+
+      expect(() => getNode(nodes, "1")).toThrow();
+    });
+  });
+
   describe("generateMap", () => {
     it("returns a non-empty array", () => {
       repeat(() => {

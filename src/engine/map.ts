@@ -11,7 +11,7 @@ import {
   MIN_SHOP_COUNT,
   MIN_SPECIAL_NODE_LAYER,
 } from "@/lib/constants";
-import type { Enemy, GeneratedMap } from "@/lib/types";
+import type { Enemy, GeneratedMap, MapNode } from "@/lib/types";
 import { pickRandom, randomBetween } from "@/lib/utils";
 
 export const generateMap = (enemyPool: Enemy[], bossPool: Enemy[]): GeneratedMap => {
@@ -146,3 +146,11 @@ export const groupNodesByLayer = (generatedMap: GeneratedMap) =>
   );
 
 export const getAllConnections = (generatedMap: GeneratedMap) => new Set(generatedMap.flatMap((node) => node.connections));
+
+export const getNode = (nodes: MapNode[], id: string): MapNode => {
+  const node = nodes.find((node) => node.id === id);
+
+  if (!node) throw new Error(`No MapNode found with ${id}`);
+
+  return node;
+};
