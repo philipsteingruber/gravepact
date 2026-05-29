@@ -35,7 +35,8 @@ export type SupportCard = {
 };
 export type AuraCard = { kind: "aura"; effectId: string; energyReservation: number };
 
-export type Card = { id: string; name: string; rarity: RewardRarity } & (SkillCard | SupportCard | AuraCard);
+export type BaseCard = { id: string; name: string; rarity: RewardRarity };
+export type Card = BaseCard & (SkillCard | SupportCard | AuraCard);
 
 export type Relic = { id: string; name: string; rarity: RewardRarity; effectId: string };
 
@@ -58,7 +59,13 @@ export type Enemy = {
 
 // --- Entities ---
 
-export type MapNode = { id: string; kind: "combat" | "elite" | "shop" | "rest" | "boss"; layer: number; connections: string[]; assignedEnemyId?: string };
+export type MapNode = {
+  id: string;
+  kind: "combat" | "elite" | "shop" | "rest" | "boss";
+  layer: number;
+  connections: string[];
+  assignedEnemyId?: string;
+};
 export type GeneratedMap = MapNode[];
 
 export type Upgrade = { id: string; name: string };
@@ -71,6 +78,7 @@ export type CombatState = {
   energyRemaining: number;
   energyMax: number;
   stagedCards: Card[];
+  originalHandOrder: Card[];
 };
 export type RunState = {
   deck: Card[];

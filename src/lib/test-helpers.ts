@@ -1,4 +1,4 @@
-import type { AuraCard, Card, Enemy, MapNode, SkillCard, SupportCard } from "./types";
+import type { AuraCard, BaseCard, Card, Enemy, MapNode, SkillCard, SupportCard } from "./types";
 
 export const createMockEnemy = (overrides?: Partial<Enemy>): Enemy => {
   return {
@@ -13,7 +13,7 @@ export const createMockEnemy = (overrides?: Partial<Enemy>): Enemy => {
   };
 };
 
-export const createMockSkillCard = (overrides?: Partial<SkillCard>): Card => {
+export const createMockSkillCard = (overrides?: Partial<BaseCard & SkillCard>): Card => {
   return {
     kind: "skill",
     effectId: "exsanguinate",
@@ -27,7 +27,7 @@ export const createMockSkillCard = (overrides?: Partial<SkillCard>): Card => {
   };
 };
 
-export const createMockSupportCard = (overrides?: Partial<SupportCard>): Card => {
+export const createMockSupportCard = (overrides?: Partial<BaseCard & SupportCard>): Card => {
   return {
     kind: "support",
     energyCost: 1,
@@ -40,7 +40,7 @@ export const createMockSupportCard = (overrides?: Partial<SupportCard>): Card =>
   };
 };
 
-export const createMockAuraCard = (overrides?: Partial<AuraCard>): Card => {
+export const createMockAuraCard = (overrides?: Partial<BaseCard & AuraCard>): Card => {
   return {
     kind: "aura",
     id: "mock_card",

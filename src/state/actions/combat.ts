@@ -43,9 +43,34 @@ export const stageCard = (state: GameState, card: Card) => {
       combat.energyRemaining -= card.energyCost;
     }
 
-    const cardIndex = draft.run.hand.findIndex((c) => c === card);
+    const cardIndex = draft.run.hand.findIndex((c) => c.id === card.id);
+
+    if (combat.originalHandOrder.length === 0) {
+      combat.originalHandOrder = [...draft.run.hand];
+    }
+
     draft.run.hand.splice(cardIndex, 1);
     combat.stagedCards.push(card);
+  });
+};
+
+export const unstageCard = (state: GameState, stagedCard: Card): GameState => {
+  if (!state.run.combat || !state.run.combat.stagedCards.includes(stagedCard)) return state;
+
+  return produce(state, (draft) => {
+    const combat = draft.run.combat!;
+
+    combat.stagedCards.splice(
+      combat.stagedCards.findIndex((card) => card.id === stagedCard.id),
+      1,
+    );
+
+    const stagedCardIndex = combat.originalHandOrder.findIndex((card) => card.id === stagedCard.id);
+    const insertBefore = draft.run.hand.findIndex((card) => combat.originalHandOrder.findIndex((c) => c.id === card.id) > stagedCardIndex);
+
+    draft.run.hand.splice(insertBefore > -1 ? insertBefore : draft.run.hand.length, 0, stagedCard);
+
+    combat.energyRemaining += stagedCard.kind === "aura" ? stagedCard.energyReservation : stagedCard.energyCost;
   });
 };
 
@@ -78,6 +103,7 @@ export const playHand = (state: GameState) => {
     const combat = draft.run.combat!;
     draft.run.discardPile.push(...combat.stagedCards);
     combat.stagedCards = [];
+    combat.originalHandOrder = [];
   });
 };
 
@@ -88,6 +114,7 @@ export const endTurn = (state: GameState) => {
     const combat = draft.run.combat!;
     draft.run.hand.push(...combat.stagedCards);
     combat.stagedCards = [];
+    combat.originalHandOrder = [];
     draft.run.discardPile.push(...draft.run.hand);
     draft.run.hand = [];
     combat.energyRemaining = combat.energyMax - draft.run.reservedEnergy;
@@ -137,17 +164,3 @@ export const resolveEnemyTurn = (state: GameState): GameState => {
     combat.enemy.intentIndex = (combat.enemy.intentIndex + 1) % combat.enemy.intents.length;
   });
 };
-
-export const unstageCard = (state: GameState, stagedCard: Card): GameState => {
-  if (!state.run.combat || !state.run.combat.stagedCards.includes(stagedCard)) return state;
-
-  return produce(state, (draft) => {
-    const combat = draft.run.combat!;
-    const index = combat.stagedCards.findIndex((card) => card === stagedCard);
-
-    combat.stagedCards.splice(index, 1);
-    draft.run.hand.push(stagedCard);
-    combat.energyRemaining += stagedCard.kind === "aura" ? stagedCard.energyReservation : stagedCard.energyCost;
-  });
-};
-

@@ -4,17 +4,7 @@ import type { SkillOutput } from "@/lib/types";
 import { produce } from "immer";
 import { initialCombatState } from "../combat-state";
 import { store } from "../store";
-import {
-  applySkillOutput,
-  playHand,
-  drawHand,
-  endCombat,
-  endTurn,
-  resolveEnemyTurn,
-  stageCard,
-  startCombat,
-  unstageCard,
-} from "./combat";
+import { applySkillOutput, drawHand, endCombat, endTurn, playHand, resolveEnemyTurn, stageCard, startCombat, unstageCard } from "./combat";
 
 describe("combatActions", () => {
   describe("startCombat", () => {
@@ -528,6 +518,26 @@ describe("combatActions", () => {
       const updatedState = unstageCard(state, stagedCard);
 
       expect(updatedState).toEqual(state);
+    });
+
+    it("preserves original hand order when cards are staged and unstaged out of order", () => {
+      const cardA = createMockSkillCard({ id: "A" });
+      const cardB = createMockSkillCard({ id: "B" });
+      const cardC = createMockSkillCard({ id: "C" });
+      const cardD = createMockSkillCard({ id: "D" });
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
+        draft.run.hand = [cardA, cardB, cardC, cardD];
+        draft.run.combat.stagedCards = [];
+      });
+
+      state = stageCard(state, cardB);
+      state = stageCard(state, cardC);
+      state = unstageCard(state, cardB);
+      state = unstageCard(state, cardC);
+
+      expect(state.run.hand).toEqual([cardA, cardB, cardC, cardD]);
     });
   });
 });
