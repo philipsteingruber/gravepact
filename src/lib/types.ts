@@ -68,6 +68,8 @@ export type MapNode = {
 };
 export type GeneratedMap = MapNode[];
 
+export type LocationData = { cardPool: Card[] };
+
 export type Upgrade = { id: string; name: string };
 export type CharacterClass = { id: string; name: string };
 
@@ -92,6 +94,7 @@ export type RunState = {
   playerMaxHealth: number;
   reservedEnergy: number;
 
+  locationId: string;
   map: GeneratedMap;
   visitedNodes: MapNode[];
   currentNodeId: string | null;

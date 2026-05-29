@@ -16,6 +16,7 @@ export const initialRunState = {
   playerMaxHealth: BASE_MAX_HEALTH,
   reservedEnergy: 0,
 
+  locationId: "rotting_strand",
   visitedNodes: [],
   map: generateMap(enemies, bosses),
   currentNodeId: null,

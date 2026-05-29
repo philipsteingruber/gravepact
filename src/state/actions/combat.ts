@@ -128,7 +128,15 @@ export const endTurn = (state: GameState) => {
 };
 
 export const endCombat = (state: GameState) => {
+  if (!state.run.combat) return state;
+
   return produce(state, (draft) => {
+    const combat = draft.run.combat!;
+
+    combat.hand.push(...combat.stagedCards);
+    combat.discardPile.push(...combat.hand);
+    draft.run.deck.push(...combat.discardPile);
+
     draft.run.combat = null;
   });
 };

@@ -2,6 +2,10 @@
 export const SCREEN_WIDTH = 1920 * (2 / 3);
 export const SCREEN_HEIGHT = 1080 * (2 / 3);
 
+export const CARD_WIDTH = 140;
+export const CARD_HEIGHT = 160;
+export const CARD_SPACING = 10;
+
 // --- Player ---
 export const BASE_MAX_HEALTH = 100; // tune
 export const BASE_MAX_ENERGY = 3; // tune

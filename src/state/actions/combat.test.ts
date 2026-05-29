@@ -1,5 +1,5 @@
 import { BASE_MAX_ENERGY, BASE_MAX_HEALTH } from "@/lib/constants";
-import { createMockAuraCard, createMockEnemy, createMockSkillCard, createMockSupportCard } from "@/lib/test-helpers";
+import { createMockAuraCard, createMockCombatState, createMockEnemy, createMockSkillCard, createMockSupportCard } from "@/lib/test-helpers";
 import type { SkillOutput } from "@/lib/types";
 import { produce } from "immer";
 import { initialCombatState } from "../combat-state";
@@ -238,6 +238,25 @@ describe("combatActions", () => {
       state = endCombat(state);
 
       expect(state.run.combat).toBe(null);
+    });
+
+    it("merges hand, discardPile and stagedCards into deck", () => {
+      const handCard = createMockAuraCard();
+      const discardCard = createMockSkillCard();
+      const stagedCard = createMockSupportCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.deck = [];
+        draft.run.combat = createMockCombatState({
+          hand: [handCard],
+          discardPile: [discardCard],
+          stagedCards: [stagedCard],
+        });
+      });
+
+      state = endCombat(state);
+
+      expect(state.run.deck).toEqual([discardCard, handCard, stagedCard]);
     });
   });
 

@@ -1,9 +1,10 @@
 import { skillCards } from "@/data/cards/skills";
 import { supportCards } from "@/data/cards/supports";
-import { SCREEN_HEIGHT, SCREEN_WIDTH } from "@/lib/constants";
+import { CARD_HEIGHT, CARD_SPACING, CARD_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH } from "@/lib/constants";
+import { addHoverStyle, renderCard } from "@/lib/scene-utils";
 import { createMockEnemy } from "@/lib/test-helpers";
-import type { Card, CombatState } from "@/lib/types";
-import { endTurn, playHand, resolveEnemyTurn, stageCard, startCombat, unstageCard } from "@/state/actions/combat";
+import type { Card, CombatState, GameState } from "@/lib/types";
+import { endCombat, endTurn, playHand, resolveEnemyTurn, stageCard, startCombat, unstageCard } from "@/state/actions/combat";
 import { store } from "@/state/store";
 import { produce } from "immer";
 import Phaser from "phaser";
@@ -28,10 +29,6 @@ const PLAY_HAND_BUTTON_DISABLED_COLOR = 0x1a1a1a;
 
 const END_TURN_BUTTON_COLOR = 0x4a2a2a;
 const END_TURN_BUTTON_HOVER_COLOR = 0x6a3a3a;
-
-const CARD_WIDTH = 140;
-const CARD_HEIGHT = 160;
-const CARD_SPACING = 10;
 
 // --- Computed Y positions ---
 const playerStatusY = ENEMY_PANEL_HEIGHT + PANEL_GAP;
@@ -76,26 +73,6 @@ export class CombatScene extends Phaser.Scene {
     this.renderStagingZone(combat.stagedCards);
     this.renderHandPanel(combat.hand);
     this.renderActionButtons(combat.stagedCards);
-  }
-
-  private renderCard(x: number, y: number, card: Card, onClick: () => void) {
-    this.add
-      .rectangle(x, y, CARD_WIDTH, CARD_HEIGHT, card.kind === "support" ? 0x4a2d6e : 0x2d4a6e)
-      .setOrigin(0, 0)
-      .setInteractive()
-      .on("pointerdown", onClick);
-
-    this.add.text(x + CARD_WIDTH / 2, y + 10, card.name).setOrigin(0.5, 0);
-    this.add
-      .text(
-        x + CARD_WIDTH / 2,
-        y + CARD_HEIGHT / 2,
-        [...(card.kind === "support" ? card.compatibleTags : card.kind === "skill" ? card.tags : [])].join(" "),
-      )
-      .setOrigin(0.5, 0);
-    this.add
-      .text(x + CARD_WIDTH / 2, y + CARD_HEIGHT / 2 + 20, "◆".repeat(card.kind === "aura" ? card.energyReservation : card.energyCost))
-      .setOrigin(0.5, 0);
   }
 
   private renderEnemyPanel(combat: CombatState) {
@@ -144,7 +121,7 @@ export class CombatScene extends Phaser.Scene {
       const startX = (SCREEN_WIDTH - totalWidth) / 2;
 
       stagedCards.forEach((card, i) => {
-        this.renderCard(startX + i * (CARD_WIDTH + CARD_SPACING), stagedCardY, card, () => {
+        renderCard(this, startX + i * (CARD_WIDTH + CARD_SPACING), stagedCardY, card, () => {
           store.gameState = unstageCard(store.gameState, card);
           this.scene.restart();
         });
@@ -159,7 +136,7 @@ export class CombatScene extends Phaser.Scene {
     const startX = (SCREEN_WIDTH - totalWidth) / 2;
 
     hand.forEach((card, i) => {
-      this.renderCard(startX + i * (CARD_WIDTH + CARD_SPACING), handCardY, card, () => {
+      renderCard(this, startX + i * (CARD_WIDTH + CARD_SPACING), handCardY, card, () => {
         store.gameState = stageCard(store.gameState, card);
         this.scene.restart();
       });
@@ -185,15 +162,12 @@ export class CombatScene extends Phaser.Scene {
         playHandButtonColor,
       )
       .setInteractive()
-      .on("pointerover", () => {
-        if (isHandValid) playHandButton.setFillStyle(PLAY_HAND_BUTTON_HOVER_COLOR);
-      })
-      .on("pointerout", () => playHandButton.setFillStyle(playHandButtonColor))
       .on("pointerdown", () => {
         if (!isHandValid) return;
         store.gameState = playHand(store.gameState);
-        this.scene.restart();
+        handlePostAction(store.gameState, this.scene);
       });
+    if (isHandValid) addHoverStyle(playHandButton, PLAY_HAND_BUTTON_COLOR, PLAY_HAND_BUTTON_HOVER_COLOR);
     this.add.text(SCREEN_WIDTH / 2 - buttonOffset, actionButtonsY + ACTION_BUTTONS_PANEL_HEIGHT / 2, "Play Hand").setOrigin(0.5, 0.5);
 
     const endTurnButton = this.add
@@ -205,13 +179,21 @@ export class CombatScene extends Phaser.Scene {
         END_TURN_BUTTON_COLOR,
       )
       .setInteractive()
-      .on("pointerover", () => endTurnButton.setFillStyle(END_TURN_BUTTON_HOVER_COLOR))
-      .on("pointerout", () => endTurnButton.setFillStyle(END_TURN_BUTTON_COLOR))
       .on("pointerdown", () => {
         store.gameState = resolveEnemyTurn(store.gameState);
         store.gameState = endTurn(store.gameState);
-        this.scene.restart();
+        handlePostAction(store.gameState, this.scene);
       });
+    addHoverStyle(endTurnButton, END_TURN_BUTTON_COLOR, END_TURN_BUTTON_HOVER_COLOR);
     this.add.text(SCREEN_WIDTH / 2 + buttonOffset, actionButtonsY + ACTION_BUTTONS_PANEL_HEIGHT / 2, "End Turn").setOrigin(0.5, 0.5);
   }
 }
+
+const handlePostAction = (state: GameState, scene: Phaser.Scenes.ScenePlugin): void => {
+  if (state.run.combat?.enemy.hp ?? 1 <= 0) {
+    store.gameState = endCombat(state);
+    scene.start("REWARD");
+  } else {
+    scene.restart();
+  }
+};

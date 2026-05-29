@@ -1,4 +1,5 @@
-import type { AuraCard, BaseCard, Card, Enemy, MapNode, SkillCard, SupportCard } from "./types";
+import { initialCombatState } from "@/state/combat-state";
+import type { AuraCard, BaseCard, Card, CombatState, Enemy, MapNode, SkillCard, SupportCard } from "./types";
 
 export const createMockEnemy = (overrides?: Partial<Enemy>): Enemy => {
   return {
@@ -59,6 +60,14 @@ export const createMockMapNode = (overrides?: Partial<MapNode>): MapNode => {
     connections: [],
     layer: 0,
     assignedEnemyId: undefined,
+    ...overrides,
+  };
+};
+
+export const createMockCombatState = (overrides?: Partial<CombatState>): CombatState => {
+  return {
+    ...initialCombatState,
+    enemy: createMockEnemy(),
     ...overrides,
   };
 };
