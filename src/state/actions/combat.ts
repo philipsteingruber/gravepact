@@ -15,15 +15,19 @@ export const startCombat = (state: GameState, enemy: Enemy) => {
 };
 
 export const drawHand = (state: GameState) => {
-  let drawAmount = BASE_HAND_SIZE - state.run.hand.length;
+  if (!state.run.combat) return state;
+
+  const combat = state.run.combat!;
+
+  let drawAmount = BASE_HAND_SIZE - combat.hand.length;
 
   while (drawAmount > 0) {
-    if (state.run.deck.length === 0 && state.run.discardPile.length === 0) break;
+    if (state.run.deck.length === 0 && combat.discardPile.length === 0) break;
 
     if (state.run.deck.length === 0)
       state = produce(state, (draft) => {
-        draft.run.deck = [...draft.run.discardPile];
-        draft.run.discardPile = [];
+        draft.run.deck = [...draft.run.combat!.discardPile];
+        draft.run.combat!.discardPile = [];
       });
 
     state = drawCards(state, 1);
@@ -34,7 +38,7 @@ export const drawHand = (state: GameState) => {
 };
 
 export const stageCard = (state: GameState, card: Card) => {
-  if (!state.run.hand.includes(card) || !state.run.combat) return state;
+  if (!state.run.combat || !state.run.combat!.hand.includes(card) || !state.run.combat) return state;
 
   return produce(state, (draft) => {
     const combat = draft.run.combat!;
@@ -43,13 +47,13 @@ export const stageCard = (state: GameState, card: Card) => {
       combat.energyRemaining -= card.energyCost;
     }
 
-    const cardIndex = draft.run.hand.findIndex((c) => c.id === card.id);
+    const cardIndex = combat.hand.findIndex((c) => c.id === card.id);
 
     if (combat.originalHandOrder.length === 0) {
-      combat.originalHandOrder = [...draft.run.hand];
+      combat.originalHandOrder = [...combat.hand];
     }
 
-    draft.run.hand.splice(cardIndex, 1);
+    combat.hand.splice(cardIndex, 1);
     combat.stagedCards.push(card);
   });
 };
@@ -66,9 +70,9 @@ export const unstageCard = (state: GameState, stagedCard: Card): GameState => {
     );
 
     const stagedCardIndex = combat.originalHandOrder.findIndex((card) => card.id === stagedCard.id);
-    const insertBefore = draft.run.hand.findIndex((card) => combat.originalHandOrder.findIndex((c) => c.id === card.id) > stagedCardIndex);
+    const insertBefore = combat.hand.findIndex((card) => combat.originalHandOrder.findIndex((c) => c.id === card.id) > stagedCardIndex);
 
-    draft.run.hand.splice(insertBefore > -1 ? insertBefore : draft.run.hand.length, 0, stagedCard);
+    combat.hand.splice(insertBefore > -1 ? insertBefore : combat.hand.length, 0, stagedCard);
 
     combat.energyRemaining += stagedCard.kind === "aura" ? stagedCard.energyReservation : stagedCard.energyCost;
   });
@@ -101,7 +105,7 @@ export const playHand = (state: GameState) => {
 
   return produce(state, (draft) => {
     const combat = draft.run.combat!;
-    draft.run.discardPile.push(...combat.stagedCards);
+    combat.discardPile.push(...combat.stagedCards);
     combat.stagedCards = [];
     combat.originalHandOrder = [];
   });
@@ -112,11 +116,11 @@ export const endTurn = (state: GameState) => {
 
   state = produce(state, (draft) => {
     const combat = draft.run.combat!;
-    draft.run.hand.push(...combat.stagedCards);
+    combat.hand.push(...combat.stagedCards);
     combat.stagedCards = [];
     combat.originalHandOrder = [];
-    draft.run.discardPile.push(...draft.run.hand);
-    draft.run.hand = [];
+    combat.discardPile.push(...combat.hand);
+    combat.hand = [];
     combat.energyRemaining = combat.energyMax - draft.run.reservedEnergy;
   });
 

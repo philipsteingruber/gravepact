@@ -8,8 +8,6 @@ import { shuffle } from "@/lib/utils";
 
 export const initialRunState = {
   deck: shuffle([...skillCards, ...supportCards]), // TODO: Placeholder
-  hand: [],
-  discardPile: [],
 
   relics: [],
   activeAuras: [],

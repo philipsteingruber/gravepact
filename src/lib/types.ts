@@ -79,11 +79,11 @@ export type CombatState = {
   energyMax: number;
   stagedCards: Card[];
   originalHandOrder: Card[];
+  hand: Card[];
+  discardPile: Card[];
 };
 export type RunState = {
   deck: Card[];
-  hand: Card[];
-  discardPile: Card[];
 
   relics: Relic[];
   activeAuras: AuraCard[];

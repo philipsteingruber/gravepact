@@ -33,3 +33,4 @@ dist-ssr
 docs/inspiration/
 
 .superpowers/
+.agents/

@@ -64,7 +64,7 @@ export class CombatScene extends Phaser.Scene {
         }),
       );
       store.gameState = produce(store.gameState, (draft) => {
-        draft.run.hand = [...skillCards.slice(0, 2), ...supportCards.slice(0, 2)];
+        draft.run.combat!.hand = [...skillCards.slice(0, 2), ...supportCards.slice(0, 2)];
       });
     }
 
@@ -74,7 +74,7 @@ export class CombatScene extends Phaser.Scene {
     this.renderEnemyPanel(combat);
     this.renderPlayerStatusPanel(run.playerHealth, run.playerMaxHealth, combat);
     this.renderStagingZone(combat.stagedCards);
-    this.renderHandPanel(run.hand);
+    this.renderHandPanel(combat.hand);
     this.renderActionButtons(combat.stagedCards);
   }
 
@@ -128,9 +128,7 @@ export class CombatScene extends Phaser.Scene {
 
   private renderPlayerStatusPanel(playerHealth: number, playerMaxHealth: number, combat: CombatState) {
     this.add.rectangle(0, playerStatusY, SCREEN_WIDTH, PLAYER_STATUS_PANEL_HEIGHT, PLAYER_STATUS_PANEL_FILL_COLOR).setOrigin(0, 0);
-    this.add
-      .text(20, playerStatusY + PLAYER_STATUS_PANEL_HEIGHT / 2, `❤️ ${playerHealth}/${playerMaxHealth} HP`)
-      .setOrigin(0, 0.5);
+    this.add.text(20, playerStatusY + PLAYER_STATUS_PANEL_HEIGHT / 2, `❤️ ${playerHealth}/${playerMaxHealth} HP`).setOrigin(0, 0.5);
 
     const energyPips = "◆".repeat(combat.energyRemaining) + "◇".repeat(combat.energyMax - combat.energyRemaining);
     this.add.text(SCREEN_WIDTH - 20, playerStatusY + PLAYER_STATUS_PANEL_HEIGHT / 2, energyPips).setOrigin(1, 0.5);

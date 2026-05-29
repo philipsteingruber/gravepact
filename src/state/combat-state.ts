@@ -6,4 +6,6 @@ export const initialCombatState = {
   energyMax: BASE_MAX_ENERGY,
   stagedCards: [],
   originalHandOrder: [],
+  hand: [],
+  discardPile: [],
 } satisfies Omit<CombatState, "enemy">;
