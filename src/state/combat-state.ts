@@ -4,6 +4,8 @@ import type { CombatState } from "@/lib/types";
 export const initialCombatState = {
   energyRemaining: BASE_MAX_ENERGY,
   energyMax: BASE_MAX_ENERGY,
+  activeAuras: [],
+  reservedEnergy: 0,
   stagedCards: [],
   originalHandOrder: [],
   hand: [],

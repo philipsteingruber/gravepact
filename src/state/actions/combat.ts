@@ -1,5 +1,6 @@
+import { effects } from "@/data/effects";
+import { tickAuras } from "@/engine/aura";
 import { resolveEnemyAttack } from "@/engine/combat";
-import { effects } from "@/engine/effects";
 import { applyStatuses, getBleedAttackBonus, resolveIncomingDamage, tickStatuses } from "@/engine/statuses";
 import { filterCompatibleMods, resolveSupports } from "@/engine/supports";
 import { BASE_HAND_SIZE } from "@/lib/constants";
@@ -74,7 +75,7 @@ export const unstageCard = (state: GameState, stagedCard: Card): GameState => {
 
     combat.hand.splice(insertBefore > -1 ? insertBefore : combat.hand.length, 0, stagedCard);
 
-    combat.energyRemaining += stagedCard.kind === "aura" ? stagedCard.energyReservation : stagedCard.energyCost;
+    if (stagedCard.kind !== "aura") combat.energyRemaining += stagedCard.energyCost;
   });
 };
 
@@ -99,8 +100,20 @@ export const playHand = (state: GameState) => {
     const modifiedSkillOutput = resolveSupports({ skillOutput, mods });
     state = applySkillOutput(state, modifiedSkillOutput);
   } else if (state.run.combat.stagedCards.some((card) => card.kind === "aura")) {
-    // TODO: Resolve aura cards (Phase 2)
-    return state;
+    state = produce(state, (draft) => {
+      const combat = draft.run.combat!;
+
+      const auraCard = combat.stagedCards.find((card) => card.kind === "aura")!;
+      combat.activeAuras.push(auraCard);
+
+      combat.reservedEnergy += auraCard.energyReservation;
+      combat.energyRemaining -= auraCard.energyReservation;
+
+      combat.discardPile.push(...combat.stagedCards.filter((card) => card.kind !== "aura"));
+
+      combat.stagedCards = [];
+      combat.originalHandOrder = [];
+    });
   }
 
   return produce(state, (draft) => {
@@ -121,7 +134,7 @@ export const endTurn = (state: GameState) => {
     combat.originalHandOrder = [];
     combat.discardPile.push(...combat.hand);
     combat.hand = [];
-    combat.energyRemaining = combat.energyMax - draft.run.reservedEnergy;
+    combat.energyRemaining = combat.energyMax - combat.reservedEnergy;
   });
 
   return drawHand(state);
@@ -136,6 +149,8 @@ export const endCombat = (state: GameState) => {
     combat.hand.push(...combat.stagedCards);
     combat.discardPile.push(...combat.hand);
     draft.run.deck.push(...combat.discardPile);
+
+    draft.run.deck.push(...(combat.activeAuras as Card[]));
 
     draft.run.combat = null;
   });
@@ -157,10 +172,16 @@ export const applySkillOutput = (state: GameState, skillOutput: SkillOutput): Ga
 
 export const resolveEnemyTurn = (state: GameState): GameState => {
   if (!state.run.combat) return state;
+
   const { enemy } = state.run.combat;
   const intent = enemy.intents[enemy.intentIndex];
+
+  const auraResults = tickAuras(state, [{ kind: "enemy", enemyId: state.run.combat.enemy.id }]);
+  auraResults.forEach((res) => (state = applySkillOutput(state, res)));
+
   return produce(state, (draft) => {
     const combat = draft.run.combat!;
+
     combat.enemy = tickStatuses(combat.enemy).enemy;
 
     if (intent.kind === "attack") {

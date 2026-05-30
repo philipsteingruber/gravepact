@@ -67,7 +67,9 @@ Magic numbers (energy costs, card rarity weights, Shard drop rates, status effec
 
 For any non-trivial logic in `engine/` or `state/`, start with a failing test. Skipping TDD is allowed for exploratory or throwaway code, but must be stated explicitly. When guiding implementation, always ask "what test would prove this works?" before discussing how to implement it.
 
-**Pacing:** RED and GREEN are two separate steps. Guide the user to write the test first, confirm it fails, then stop. Only move to implementation after the RED step is complete. Do not combine both steps in one response.
+**Pacing:** RED and GREEN are two separate steps. Guide the user to write the test first, confirm it fails, then stop. Only move to implementation after the RED step is complete. Do not combine both steps in one response. Always guide one test at a time — never ask the user to write multiple tests at once.
+
+**Minimal GREEN:** When guiding the GREEN step, describe only the code needed to make the current failing test pass — not the full feature. Do not reference the design doc or describe behaviors that aren't yet tested. If the user implements more than the current test requires, flag it: future tests that cover that behavior will pass immediately without ever being RED, which breaks TDD.
 
 **Code in TDD guidance:** Describe what the test should assert and why in prose — do not write code blocks. The user writes the code themselves. Only provide code if they're stuck or explicitly ask.
 

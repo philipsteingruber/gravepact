@@ -1,6 +1,6 @@
 import { BASE_MAX_ENERGY, BASE_MAX_HEALTH } from "@/lib/constants";
 import { createMockAuraCard, createMockCombatState, createMockEnemy, createMockSkillCard, createMockSupportCard } from "@/lib/test-helpers";
-import type { SkillOutput } from "@/lib/types";
+import type { AuraCard, SkillOutput } from "@/lib/types";
 import { produce } from "immer";
 import { initialCombatState } from "../combat-state";
 import { store } from "../store";
@@ -9,9 +9,7 @@ import { applySkillOutput, drawHand, endCombat, endTurn, playHand, resolveEnemyT
 describe("combatActions", () => {
   describe("startCombat", () => {
     it("initializes a fresh CombatState", () => {
-      let state = produce(store.gameState, (draft) => {
-        draft.run.reservedEnergy = 0;
-      });
+      let state = store.gameState;
 
       state = startCombat(state, createMockEnemy());
 
@@ -71,7 +69,6 @@ describe("combatActions", () => {
       const mockCard = createMockSkillCard({ energyCost: 1 });
       let state = produce(store.gameState, (draft) => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
-        draft.run.reservedEnergy = 0;
         draft.run.combat!.hand = [mockCard];
       });
 
@@ -139,18 +136,6 @@ describe("combatActions", () => {
       expect(modifiedState).toEqual(originalState);
     });
 
-    it("returns state unchanged when commiting a hand with an aura card", () => {
-      const mockCard = createMockAuraCard();
-      const originalState = produce(store.gameState, (draft) => {
-        draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
-        draft.run.combat.stagedCards = [mockCard];
-      });
-
-      const modifiedState = playHand(originalState);
-
-      expect(modifiedState).toEqual(originalState);
-    });
-
     it("applies compatible support modifications when commiting a skill", () => {
       const mockSkillCard = createMockSkillCard({ tags: ["Attack"], target: { kind: "enemy", enemyId: "test" } });
       const mockSupportCard = createMockSupportCard({
@@ -169,6 +154,94 @@ describe("combatActions", () => {
       );
 
       expect(state.run.combat!.enemy.hp).toBe(8);
+    });
+
+    it("moves a staged aura to combat.activeAuras", () => {
+      const card = createMockAuraCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ stagedCards: [card], activeAuras: [] });
+      });
+
+      state = playHand(state);
+
+      expect(state.run.combat?.activeAuras).toEqual([card]);
+    });
+
+    it("increments combat.reservedEnergy by the aura's energyReservation", () => {
+      const card = createMockAuraCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ stagedCards: [card], reservedEnergy: 0 });
+      });
+
+      state = playHand(state);
+
+      expect(state.run.combat!.reservedEnergy).toBe(1);
+    });
+
+    it("immediately reduces combat.energyRemaining by the aura's energyReservation", () => {
+      const card = createMockAuraCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ stagedCards: [card], energyRemaining: 1 });
+      });
+
+      state = playHand(state);
+
+      expect(state.run.combat!.energyRemaining).toBe(0);
+    });
+
+    it("leaves combat.energyMax unchanged when an aura is played", () => {
+      const card = createMockAuraCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ stagedCards: [card], energyMax: 3 });
+      });
+
+      state = playHand(state);
+
+      expect(state.run.combat!.energyMax).toBe(3);
+    });
+
+    it("moves staged supports to the discard pile when an aura is played", () => {
+      const auraCard = createMockAuraCard();
+      const supportCard = createMockSupportCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ stagedCards: [auraCard, supportCard], discardPile: [] });
+      });
+
+      state = playHand(state);
+
+      expect(state.run.combat!.discardPile).toEqual([supportCard]);
+    });
+
+    it("does not move the aura to the discard pile when played", () => {
+      const auraCard = createMockAuraCard();
+      const supportCard = createMockSupportCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ stagedCards: [auraCard, supportCard], discardPile: [] });
+      });
+
+      state = playHand(state);
+
+      expect(state.run.combat!.discardPile.includes(auraCard)).toBe(false);
+    });
+
+    it("clears stagedCards and originalHandOrder after an aura is played", () => {
+      const auraCard = createMockAuraCard();
+      const supportCard = createMockSupportCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ stagedCards: [auraCard, supportCard], discardPile: [], originalHandOrder: [auraCard] });
+      });
+
+      state = playHand(state);
+
+      expect(state.run.combat!.stagedCards).toEqual([]);
+      expect(state.run.combat!.originalHandOrder).toEqual([]);
     });
   });
 
@@ -206,7 +279,7 @@ describe("combatActions", () => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
         draft.run.deck = [mockCard, mockCard, mockCard, mockCard, mockCard];
         draft.run.combat.energyRemaining = 2;
-        draft.run.reservedEnergy = 0;
+        draft.run.combat.reservedEnergy = 0;
       });
 
       state = endTurn(state);
@@ -220,7 +293,7 @@ describe("combatActions", () => {
         draft.run.combat = { ...initialCombatState, enemy: createMockEnemy() };
         draft.run.deck = [mockCard, mockCard, mockCard, mockCard, mockCard];
         draft.run.combat.energyRemaining = 2;
-        draft.run.reservedEnergy = 1;
+        draft.run.combat.reservedEnergy = 1;
       });
 
       state = endTurn(state);
@@ -257,6 +330,19 @@ describe("combatActions", () => {
       state = endCombat(state);
 
       expect(state.run.deck).toEqual([discardCard, handCard, stagedCard]);
+    });
+
+    it("returns active auras to run.deck", () => {
+      const auraCard = createMockAuraCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.deck = [];
+        draft.run.combat = createMockCombatState({ activeAuras: [auraCard as AuraCard] });
+      });
+
+      state = endCombat(state);
+
+      expect(state.run.deck).toEqual([auraCard]);
     });
   });
 
@@ -482,6 +568,19 @@ describe("combatActions", () => {
 
       expect(state.run.combat!.enemy.intentIndex).toBe(0);
     });
+
+    it("applies active aura effects at the start of the enemy turn", () => {
+      const auraCard = createMockAuraCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ activeAuras: [auraCard as AuraCard] });
+        draft.run.combat.enemy.statuses = [];
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.combat!.enemy.statuses).toEqual([{ kind: "Bleed", stacks: 1 }]);
+    });
   });
 
   describe("unstageCard", () => {
@@ -560,6 +659,20 @@ describe("combatActions", () => {
       state = unstageCard(state, cardC);
 
       expect(state.run.combat!.hand).toEqual([cardA, cardB, cardC, cardD]);
+    });
+
+    it("does not change energyRemaining when an aura is unstaged", () => {
+      const card = createMockAuraCard({ energyReservation: 1 });
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = { ...initialCombatState, enemy: createMockEnemy(), energyRemaining: 3 };
+        draft.run.combat!.stagedCards = [card];
+        draft.run.combat!.hand = [];
+      });
+
+      state = unstageCard(state, card);
+
+      expect(state.run.combat?.energyRemaining).toBe(3);
     });
   });
 });

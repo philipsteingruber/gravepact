@@ -25,8 +25,8 @@
 
 - [ ] Support `changeBehavior`: multi-target skill modification (requires multi-enemy model)
 - [ ] Support `reduceCost`: reduce next skill's energy cost (requires inter-turn cost tracking)
-- [ ] Aura play: move aura to persistent zone, apply `energyReservation` to `energyMax`
-- [ ] Aura per-turn effect: tick aura `effectId` at start of each turn
+- [x] Aura play: move aura to persistent zone, apply `energyReservation` to `energyMax`
+- [x] Aura per-turn effect: tick aura `effectId` at start of each turn
 - [ ] Support orphan prevention: block end-of-turn confirmation if a support has no valid skill
 - [ ] Relic slot: hold up to 4 relics, trigger relic effects at appropriate combat events
 - [ ] Shop node: buy cards, buy relics, optional card removal

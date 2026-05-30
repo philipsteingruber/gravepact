@@ -20,7 +20,7 @@ export const createMockSkillCard = (overrides?: Partial<BaseCard & SkillCard>): 
     effectId: "exsanguinate",
     energyCost: 1,
     tags: [],
-    id: "mock_card",
+    id: "mock_skill_card",
     name: "Mock Card",
     rarity: "Common",
     target: { kind: "enemy", enemyId: "mock_enemy" },
@@ -32,7 +32,7 @@ export const createMockSupportCard = (overrides?: Partial<BaseCard & SupportCard
   return {
     kind: "support",
     energyCost: 1,
-    id: "mock_card",
+    id: "mock_support_card",
     name: "Mock Card",
     rarity: "Common",
     compatibleTags: [],
@@ -44,10 +44,10 @@ export const createMockSupportCard = (overrides?: Partial<BaseCard & SupportCard
 export const createMockAuraCard = (overrides?: Partial<BaseCard & AuraCard>): Card => {
   return {
     kind: "aura",
-    id: "mock_card",
+    id: "mock_aura_card",
     name: "Mock Card",
     rarity: "Common",
-    effectId: "test-aura",
+    effectId: "sanguine_rite_tick",
     energyReservation: 1,
     ...overrides,
   };

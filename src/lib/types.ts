@@ -1,6 +1,6 @@
 // --- Primitives ---
 
-import type { EffectId } from "@/engine/effects";
+import type { EffectId } from "@/data/effects";
 
 export type SkillTag = "Attack" | "Spell" | "Curse" | "Block" | "Summon";
 export type RewardRarity = "Common" | "Uncommon" | "Rare";
@@ -79,6 +79,8 @@ export type CombatState = {
   enemy: Enemy;
   energyRemaining: number;
   energyMax: number;
+  activeAuras: AuraCard[];
+  reservedEnergy: number;
   stagedCards: Card[];
   originalHandOrder: Card[];
   hand: Card[];
@@ -88,11 +90,9 @@ export type RunState = {
   deck: Card[];
 
   relics: Relic[];
-  activeAuras: AuraCard[];
 
   playerHealth: number;
   playerMaxHealth: number;
-  reservedEnergy: number;
 
   locationId: string;
   map: GeneratedMap;

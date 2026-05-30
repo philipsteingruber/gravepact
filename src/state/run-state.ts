@@ -10,11 +10,9 @@ export const initialRunState = {
   deck: shuffle([...skillCards, ...supportCards]), // TODO: Placeholder
 
   relics: [],
-  activeAuras: [],
 
   playerHealth: BASE_MAX_HEALTH,
   playerMaxHealth: BASE_MAX_HEALTH,
-  reservedEnergy: 0,
 
   locationId: "rotting_strand",
   visitedNodes: [],
