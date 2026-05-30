@@ -76,6 +76,18 @@ describe("combatActions", () => {
 
       expect(state.run.combat?.energyRemaining).toBe(BASE_MAX_ENERGY - 1);
     });
+
+    it("returns state unchanged when the card's energy cost exceeds energyRemaining", () => {
+      const mockCard = createMockSkillCard({ energyCost: 1 });
+      const state = produce(store.gameState, (draft) => {
+        draft.run.combat = { ...initialCombatState, enemy: createMockEnemy(), energyRemaining: 0 };
+        draft.run.combat!.hand = [mockCard];
+      });
+
+      const updatedState = stageCard(state, mockCard);
+
+      expect(updatedState).toEqual(state);
+    });
   });
 
   describe("playHand", () => {
@@ -242,6 +254,19 @@ describe("combatActions", () => {
 
       expect(state.run.combat!.stagedCards).toEqual([]);
       expect(state.run.combat!.originalHandOrder).toEqual([]);
+    });
+
+    it("returns state unchanged when two skill cards are staged", () => {
+      const cardA = createMockSkillCard();
+      const cardB = createMockSkillCard();
+
+      const state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ stagedCards: [cardA, cardB] });
+      });
+
+      const updatedState = playHand(state);
+
+      expect(updatedState).toEqual(state);
     });
   });
 
