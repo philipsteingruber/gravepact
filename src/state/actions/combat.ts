@@ -3,6 +3,7 @@ import { tickAuras } from "@/engine/aura";
 import { resolveEnemyAttack } from "@/engine/combat";
 import { applyStatuses, getBleedAttackBonus, resolveIncomingDamage, tickStatuses } from "@/engine/statuses";
 import { filterCompatibleMods, resolveSupports } from "@/engine/supports";
+import { assertNever } from "@/lib/assert-never";
 import { BASE_HAND_SIZE } from "@/lib/constants";
 import type { Card, Enemy, GameState, SkillOutput, SupportCard } from "@/lib/types";
 import { produce } from "immer";
@@ -40,6 +41,13 @@ export const drawHand = (state: GameState) => {
 
 export const stageCard = (state: GameState, card: Card) => {
   if (!state.run.combat || !state.run.combat!.hand.includes(card) || !state.run.combat) return state;
+
+  if (
+    (card.kind === "aura" && card.energyReservation > state.run.combat.energyRemaining) ||
+    (card.kind !== "aura" && card.energyCost > state.run.combat.energyRemaining)
+  ) {
+    return state;
+  }
 
   return produce(state, (draft) => {
     const combat = draft.run.combat!;
@@ -192,6 +200,8 @@ export const resolveEnemyTurn = (state: GameState): GameState => {
       combat.enemy = applyStatuses(combat.enemy, [{ kind: "Armor", stacks: intent.amount }]);
     } else if (intent.kind === "debuff") {
       return; // TODO: Placeholder
+    } else {
+      assertNever(intent);
     }
 
     combat.enemy.intentIndex = (combat.enemy.intentIndex + 1) % combat.enemy.intents.length;
