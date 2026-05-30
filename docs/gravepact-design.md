@@ -358,6 +358,62 @@ HP values and intent damage are flagged for playtesting.
 
 ---
 
+## Engineering Conventions
+
+### Exhaustiveness checking with `assertNever`
+
+When branching on a discriminated union's `kind` field, add an `assertNever` call in the final `else` branch:
+
+```typescript
+import { assertNever } from "@/lib/assert-never";
+
+if (intent.kind === "attack") {
+  // ...
+} else if (intent.kind === "defend") {
+  // ...
+} else if (intent.kind === "debuff") {
+  // ...
+} else {
+  assertNever(intent);
+}
+```
+
+`assertNever` takes a `never`-typed argument. TypeScript narrows the union through each handled case; by the `else`, any remaining type is `never` if all cases are covered. If a new variant is added to the union without a corresponding branch, TypeScript emits a type error at the `assertNever` call, catching the omission at compile time rather than at runtime.
+
+**Where to apply:** Any `if/else if` chain or `switch` that exhausts a discriminated union in `src/engine/` or `src/state/`. Current usages: `resolveEnemyTurn` (intent kinds), `resolveSupports` (mod kinds).
+
+### Effect registry
+
+Skill and aura effects are pure functions registered by string ID in `src/data/effects.ts`. Cards reference their effect via `effectId: EffectId` — a key of the `effects` object — rather than storing the function directly. This keeps card data serialisable and centralises all effect logic in one place.
+
+Every effect must match the signature `(state: GameState, targets: Target[]) => SkillOutput`. The registry enforces this via `satisfies`:
+
+```typescript
+export const effects = {
+  lacerate: (_state, targets) => ({ damage: 14, statuses: [{ kind: "Bleed", stacks: 3 }], targets }),
+} satisfies Record<string, (state: GameState, targets: Target[]) => SkillOutput>;
+
+export type EffectId = keyof typeof effects;
+```
+
+**Adding a new skill card requires two things:** a card data object with a matching `effectId`, and the corresponding entry in `effects`. A missing registration throws at `playHand` time when the effect lookup fails.
+
+### `SkillOutput` — the combat contract
+
+`SkillOutput` is the value every effect returns and the only thing `applySkillOutput` consumes:
+
+```typescript
+type SkillOutput = { damage: number; statuses: StatusEffect[]; targets: Target[] };
+```
+
+- `damage` — raw damage before armor; `resolveIncomingDamage` applies armor absorption
+- `statuses` — applied to each target via `applyStatuses` after damage
+- `targets` — which combatants to apply the output to; currently always a single enemy
+
+Support modifications (`resolveSupports`) transform a `SkillOutput` before it reaches `applySkillOutput` — multiplicative mods scale `damage`, additive mods append to `statuses`. Effects and supports never interact directly; `SkillOutput` is the boundary between them.
+
+---
+
 ## Open Questions
 
 - Prestige currency award formula (when/if a prestige layer is added)
