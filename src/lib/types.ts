@@ -97,8 +97,8 @@ export type CombatState = {
 };
 export type RunState = {
   deck: Card[];
-
   relics: Relic[];
+  gold: number;
 
   playerHealth: number;
   playerMaxHealth: number;

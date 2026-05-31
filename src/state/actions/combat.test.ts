@@ -13,6 +13,7 @@ import { initialCombatState } from "../combat-state";
 import { store } from "../store";
 import {
   applySkillOutput,
+  awardGold,
   drawHand,
   endCombat,
   endTurn,
@@ -796,6 +797,28 @@ describe("combatActions", () => {
       state = startPlayerTurn(state);
 
       expect(state.run.combat!.enemy.statuses).toEqual([{ kind: "Bleed", stacks: 1 }]);
+    });
+  });
+
+  describe("awardGold", () => {
+    it("adds amount to run.gold", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.gold = 0;
+      });
+
+      state = awardGold(state, 25);
+
+      expect(state.run.gold).toBe(25);
+    });
+
+    it("adds to existing gold balance", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.gold = 25;
+      });
+
+      state = awardGold(state, 25);
+
+      expect(state.run.gold).toBe(50);
     });
   });
 });

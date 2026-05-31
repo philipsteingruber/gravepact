@@ -82,3 +82,8 @@ export const createMockCombatState = (overrides?: Partial<CombatState>): CombatS
     ...overrides,
   };
 };
+
+const ITERATIONS = 50;
+export const repeat = (fn: () => void) => {
+  for (let i = 0; i < ITERATIONS; i++) fn();
+};

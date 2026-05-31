@@ -28,7 +28,8 @@
 - [x] Aura play: move aura to persistent zone, apply `energyReservation` to `energyMax`
 - [x] Aura per-turn effect: tick aura `effectId` at start of each turn
 - [x] Relic slot: hold up to 4 relics, trigger relic effects at appropriate combat events
-- [ ] Shop node: buy cards, buy relics, optional card removal
+- [ ] Shop node: buy cards, buy relics
+- [ ] Basic starter cards: define generic Attack/Block starter cards; populate `initialRunState` with them (replaced by archetype starter decks in Phase 3)
 - [ ] Card removal: remove a card from deck permanently (shop mechanic)
 - [x] Resolve Armor vs. tick damage: decide whether Burn/Bleed ticks pierce Armor or are absorbed; update `tickStatuses` and `resolveIncomingDamage` accordingly
 - [ ] Card rarity weights: rarity-weighted pool sampling for rewards and shops

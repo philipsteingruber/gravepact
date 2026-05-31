@@ -218,3 +218,9 @@ export const startPlayerTurn = (state: GameState): GameState => {
 
   return state;
 };
+
+export const awardGold = (state: GameState, amount: number): GameState => {
+  return produce(state, (draft) => {
+    draft.run.gold += amount;
+  });
+};

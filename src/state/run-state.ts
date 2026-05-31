@@ -8,8 +8,8 @@ import { shuffle } from "@/lib/utils";
 
 export const initialRunState = {
   deck: shuffle([...skillCards, ...supportCards]), // TODO: Placeholder
-
   relics: [],
+  gold: 0,
 
   playerHealth: BASE_MAX_HEALTH,
   playerMaxHealth: BASE_MAX_HEALTH,

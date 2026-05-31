@@ -19,7 +19,7 @@ export const WEAKEN_PER_STACK = 0.05; // tune
 export const MIN_LAYERS_PER_MAP = 10;
 export const MAX_LAYERS_PER_MAP = 12;
 
-// Node counts per map
+// --- Node counts per map ---
 export const MIN_ELITE_COUNT = 2;
 export const MAX_ELITE_COUNT = 3;
 
@@ -29,7 +29,19 @@ export const MAX_SHOP_COUNT = 3;
 export const MIN_REST_COUNT = 2;
 export const MAX_REST_COUNT = 3;
 
-// Layer placement constraints (0-indexed; map has MIN–MAX_LAYERS_PER_MAP total layers)
+// --- Layer placement constraints (0-indexed; map has MIN–MAX_LAYERS_PER_MAP total layers) ---
 export const MIN_ELITE_LAYER = 6;
 export const MIN_SPECIAL_NODE_LAYER = 3;
 export const MAX_SPECIAL_NODE_LAYER = 8;
+
+// --- Rewards ---
+export const GOLD_REWARD_STANDARD_MIN = 20;
+export const GOLD_REWARD_STANDARD_MAX = 30;
+export const GOLD_REWARD_ELITE_MIN = 35;
+export const GOLD_REWARD_ELITE_MAX = 45;
+export const GOLD_REWARD_BOSS_MIN = 50;
+export const GOLD_REWARD_BOSS_MAX = 60;
+
+export const RARITY_WEIGHT_COMMON = 60;
+export const RARITY_WEIGHT_UNCOMMON = 30;
+export const RARITY_WEIGHT_RARE = 10;

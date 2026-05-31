@@ -1,12 +1,7 @@
 import { MAX_REST_COUNT, MIN_REST_COUNT } from "@/lib/constants";
-import { createMockMapNode } from "@/lib/test-helpers";
+import { createMockMapNode, repeat } from "@/lib/test-helpers";
 import type { Enemy, MapNode } from "@/lib/types";
 import { calculateLayersCount, calculateMaxLayer, generateMap, getAllConnections, getNode, groupNodesByLayer } from "./map";
-
-const ITERATIONS = 50;
-const repeat = (fn: () => void) => {
-  for (let i = 0; i < ITERATIONS; i++) fn();
-};
 
 const enemies: Enemy[] = [
   { id: "enemy1", name: "Enemy1", maxHp: 1, hp: 1, intents: [{ kind: "attack", damage: 5 }], intentIndex: 0, statuses: [] },

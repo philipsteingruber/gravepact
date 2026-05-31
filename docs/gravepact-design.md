@@ -77,6 +77,10 @@ Some supports interact specifically with statuses (e.g. "if target is Burning, a
 
 Passive items held in a separate **relic slot** (max 4), not in the deck. Found in elite fights and shops. Relics modify combat rules globally for the entire run — e.g. "+1 energy on turns you play a Curse," "Bleed stacks deal double damage." These are the run-defining multipliers: the Balatro jokers.
 
+**Gold:**
+
+Players earn gold after each combat. Award amounts are playtesting constants in `src/lib/constants.ts`: `GOLD_REWARD_STANDARD` (random draw from 20–30), `GOLD_REWARD_ELITE` (35–45), `GOLD_REWARD_BOSS` (50–60). Gold persists for the full run and is spent at shops. `RunState` holds a `gold: number` field, initialized to 0.
+
 ---
 
 ## Section 3 — Card System
@@ -199,7 +203,18 @@ Location data lives in `src/data/locations.ts` as a `locationData` record keyed 
 
 After combat ends, `RewardScene` reads `locationData[run.locationId].cardPool` and calls `pickRandom(pool, 3)` from `src/lib/utils.ts` to sample 3 cards without replacement (fewer if the pool is smaller than 3). The scene renders the 3 options as clickable cards. Clicking one calls `addCardToDeck(state, card)` — an action in `src/state/actions/deck.ts` that appends the card to `run.deck` — then transitions to `"MAP"`. A **Skip** button is always present; it transitions to `"MAP"` without adding a card.
 
-Both skills and supports are eligible reward cards. When Phase 2 adds rarity weighting, `pickRandom` will be replaced with a dedicated `sampleRewardCards` function in `src/engine/rewards.ts` that weights the pool by rarity before sampling.
+Both skills and supports are eligible reward cards. `sampleRewardCards(pool, count)` in `src/engine/rewards.ts` performs rarity-weighted sampling (weights: Common 60 / Uncommon 30 / Rare 10, constants in `src/lib/constants.ts`) without replacement, replacing the earlier `pickRandom` call. The shop uses the same function.
+
+**Shop flow** (`src/scenes/shop.ts`, `src/engine/shop.ts`):
+
+When the player selects a shop node, `MapScene` calls `generateShopInventory(locationCardPool, allRelics)` — defined in `src/engine/shop.ts` — then transitions via `this.scene.start('SHOP', { inventory })`. The inventory contains 4–5 rarity-weighted cards and 1–2 rarity-weighted relics sampled from the global relic pool (`src/data/relics.ts`). `ShopScene.init()` stores the inventory as a scene property; a separate `purchasedIds: Set<string>` scene property tracks bought items across scene restarts.
+
+Two purchase actions in `src/state/actions/deck.ts`:
+
+- `buyCard(state, card): GameState` — appends card to `run.deck`, deducts `getCardPrice(card.rarity)` from `run.gold`
+- `buyRelic(state, relic): GameState` — appends relic to `run.relics` (capped at 4), deducts `getRelicPrice(relic.rarity)` from `run.gold`
+
+`getCardPrice` and `getRelicPrice` in `src/engine/shop.ts` map `RewardRarity` to flat constants (flagged for playtesting): Common 40g / Uncommon 60g / Rare 90g. Relic prices match card prices at the same tier. After a purchase the item is added to `purchasedIds` and rendered non-interactive; a **Leave** button returns to `"MAP"`.
 
 **Status effects** (`src/engine/statuses.ts`):
 
