@@ -1,6 +1,7 @@
 import { effects } from "@/data/effects";
 import { tickAuras } from "@/engine/aura";
 import { resolveEnemyAttack } from "@/engine/combat";
+import { fireRelicTrigger } from "@/engine/relics";
 import { applyStatuses, getBleedAttackBonus, resolveIncomingDamage, tickStatuses } from "@/engine/statuses";
 import { filterCompatibleMods, resolveSupports } from "@/engine/supports";
 import { assertNever } from "@/lib/assert-never";
@@ -11,9 +12,10 @@ import { initialCombatState } from "../combat-state";
 import { drawCards } from "./deck";
 
 export const startCombat = (state: GameState, enemy: Enemy) => {
-  return produce(state, (draft) => {
+  state = produce(state, (draft) => {
     draft.run.combat = { ...initialCombatState, enemy };
   });
+  return fireRelicTrigger(state, { triggerKind: "onCombatStart" });
 };
 
 export const drawHand = (state: GameState) => {
@@ -107,6 +109,8 @@ export const playHand = (state: GameState) => {
 
     const modifiedSkillOutput = resolveSupports({ skillOutput, mods });
     state = applySkillOutput(state, modifiedSkillOutput);
+
+    state = fireRelicTrigger(state, { triggerKind: "onSkillPlay", card: skillCard });
   } else if (state.run.combat.stagedCards.some((card) => card.kind === "aura")) {
     state = produce(state, (draft) => {
       const combat = draft.run.combat!;
@@ -145,7 +149,7 @@ export const endTurn = (state: GameState) => {
     combat.energyRemaining = combat.energyMax - combat.reservedEnergy;
   });
 
-  return drawHand(state);
+  return startPlayerTurn(state);
 };
 
 export const endCombat = (state: GameState) => {
@@ -206,4 +210,11 @@ export const resolveEnemyTurn = (state: GameState): GameState => {
 
     combat.enemy.intentIndex = (combat.enemy.intentIndex + 1) % combat.enemy.intents.length;
   });
+};
+
+export const startPlayerTurn = (state: GameState): GameState => {
+  state = drawHand(state);
+  state = fireRelicTrigger(state, { triggerKind: "onTurnStart" });
+
+  return state;
 };

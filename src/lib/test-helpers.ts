@@ -1,5 +1,5 @@
 import { initialCombatState } from "@/state/combat-state";
-import type { AuraCard, BaseCard, Card, CombatState, Enemy, MapNode, SkillCard, SupportCard } from "./types";
+import type { AuraCard, BaseCard, Card, CombatState, Enemy, MapNode, Relic, SkillCard, SupportCard } from "./types";
 
 export const createMockEnemy = (overrides?: Partial<Enemy>): Enemy => {
   return {
@@ -49,6 +49,17 @@ export const createMockAuraCard = (overrides?: Partial<BaseCard & AuraCard>): Ca
     rarity: "Common",
     effectId: "sanguine_rite_tick",
     energyReservation: 1,
+    ...overrides,
+  };
+};
+
+export const createMockRelic = (overrides?: Partial<Relic>): Relic => {
+  return {
+    id: "doedres_damning",
+    name: "Doedre's Damning",
+    rarity: "Uncommon",
+    triggerKind: "onCombatStart",
+    effectId: "doedres_damning",
     ...overrides,
   };
 };

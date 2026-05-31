@@ -3,7 +3,7 @@ import { getNode, groupNodesByLayer } from "@/engine/map";
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "@/lib/constants";
 import type { Enemy, GameState, MapNode } from "@/lib/types";
 import { pickRandom } from "@/lib/utils";
-import { drawHand, startCombat } from "@/state/actions/combat";
+import { startCombat, startPlayerTurn } from "@/state/actions/combat";
 import { selectNode } from "@/state/actions/map";
 import { store } from "@/state/store";
 import Phaser from "phaser";
@@ -22,9 +22,7 @@ export class MapScene extends Phaser.Scene {
     const state = store.gameState;
     const nodesByLayer = groupNodesByLayer(state.run.map);
     const availableIds = new Set(
-      state.run.visitedNodes.length > 0
-        ? state.run.visitedNodes.at(-1)?.connections
-        : nodesByLayer[0].map((node) => node.id),
+      state.run.visitedNodes.length > 0 ? state.run.visitedNodes.at(-1)?.connections : nodesByLayer[0].map((node) => node.id),
     );
     const visitedIds = new Set(state.run.visitedNodes.map((node) => node.id));
 
@@ -78,12 +76,7 @@ export class MapScene extends Phaser.Scene {
     });
   }
 
-  private renderNodes(
-    nodePositions: NodePositions,
-    availableIds: Set<string>,
-    visitedIds: Set<string>,
-    state: GameState,
-  ) {
+  private renderNodes(nodePositions: NodePositions, availableIds: Set<string>, visitedIds: Set<string>, state: GameState) {
     Object.entries(nodePositions).forEach(([id, { x, y }]) => {
       const nodeColor = visitedIds.has(id) ? 0x888888 : availableIds.has(id) ? 0xffffff : 0x333333;
       const nodeButton = this.add.circle(x, y, NODE_RADIUS, nodeColor);
@@ -110,7 +103,7 @@ export class MapScene extends Phaser.Scene {
         enemy = bosses.find((boss) => boss.id === node.assignedEnemyId)!;
       }
       store.gameState = startCombat(store.gameState, enemy);
-      store.gameState = drawHand(store.gameState);
+      store.gameState = startPlayerTurn(store.gameState);
       this.scene.start("COMBAT");
     } else {
       this.scene.restart();

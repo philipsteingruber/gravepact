@@ -1,6 +1,7 @@
 // --- Primitives ---
 
 import type { EffectId } from "@/data/effects";
+import type { RelicEffectId } from "@/data/relic-effects";
 
 export type SkillTag = "Attack" | "Spell" | "Curse" | "Block" | "Summon";
 export type RewardRarity = "Common" | "Uncommon" | "Rare";
@@ -38,7 +39,15 @@ export type AuraCard = { kind: "aura"; effectId: string; energyReservation: numb
 export type BaseCard = { id: string; name: string; rarity: RewardRarity };
 export type Card = BaseCard & (SkillCard | SupportCard | AuraCard);
 
-export type Relic = { id: string; name: string; rarity: RewardRarity; effectId: string };
+// --- Relics ---
+
+export type RelicTriggerKind = "onCombatStart" | "onTurnStart" | "onSkillPlay";
+
+export type RelicContext =
+  | { triggerKind: "onCombatStart" }
+  | { triggerKind: "onTurnStart" }
+  | { triggerKind: "onSkillPlay"; card: SkillCard };
+export type Relic = { id: string; name: string; rarity: RewardRarity; effectId: RelicEffectId; triggerKind: RelicTriggerKind };
 
 // --- Enemies ---
 

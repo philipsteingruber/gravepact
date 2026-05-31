@@ -1,12 +1,6 @@
 import { createMockEnemy } from "@/lib/test-helpers";
 import type { StatusEffect } from "@/lib/types";
-import {
-  applyStatuses,
-  getBleedAttackBonus,
-  getWeakenMultiplier,
-  resolveIncomingDamage,
-  tickStatuses,
-} from "./statuses";
+import { applyStatuses, getBleedAttackBonus, getWeakenMultiplier, resolveIncomingDamage, tickStatuses } from "./statuses";
 
 describe("statuses", () => {
   describe("applyStatuses", () => {
@@ -26,6 +20,21 @@ describe("statuses", () => {
   });
 
   describe("tickStatuses", () => {
+    it("bypasses armor when dealing tick damage", () => {
+      const enemy = createMockEnemy({
+        hp: 10,
+        statuses: [
+          { kind: "Armor", stacks: 3 },
+          { kind: "Burn", stacks: 3 },
+        ],
+      });
+
+      const { totalDamage, enemy: updatedEnemy } = tickStatuses(enemy);
+      expect(totalDamage).toEqual(3);
+      expect(updatedEnemy.hp).toEqual(7);
+      expect(updatedEnemy.statuses).toContainEqual({ kind: "Armor", stacks: 3 });
+    });
+
     it("deals damage based on Burn stack count", () => {
       const enemy = createMockEnemy({ statuses: [{ kind: "Burn", stacks: 3 }], hp: 10 });
 

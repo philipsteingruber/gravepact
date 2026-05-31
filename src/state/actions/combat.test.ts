@@ -1,10 +1,28 @@
 import { BASE_MAX_ENERGY, BASE_MAX_HEALTH } from "@/lib/constants";
-import { createMockAuraCard, createMockCombatState, createMockEnemy, createMockSkillCard, createMockSupportCard } from "@/lib/test-helpers";
+import {
+  createMockAuraCard,
+  createMockCombatState,
+  createMockEnemy,
+  createMockRelic,
+  createMockSkillCard,
+  createMockSupportCard,
+} from "@/lib/test-helpers";
 import type { AuraCard, SkillOutput } from "@/lib/types";
 import { produce } from "immer";
 import { initialCombatState } from "../combat-state";
 import { store } from "../store";
-import { applySkillOutput, drawHand, endCombat, endTurn, playHand, resolveEnemyTurn, stageCard, startCombat, unstageCard } from "./combat";
+import {
+  applySkillOutput,
+  drawHand,
+  endCombat,
+  endTurn,
+  playHand,
+  resolveEnemyTurn,
+  stageCard,
+  startCombat,
+  startPlayerTurn,
+  unstageCard,
+} from "./combat";
 
 describe("combatActions", () => {
   describe("startCombat", () => {
@@ -18,6 +36,16 @@ describe("combatActions", () => {
       expect(state.run.combat?.energyRemaining).toBe(BASE_MAX_ENERGY);
       expect(state.run.combat?.stagedCards).toEqual([]);
       expect(state.run.combat?.enemy.id).toBe("mock_enemy");
+    });
+
+    it("fires onCombatStart relics", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.relics = [createMockRelic({ triggerKind: "onCombatStart", effectId: "doedres_damning" })];
+      });
+
+      state = startCombat(state, createMockEnemy());
+
+      expect(state.run.combat?.enemy.statuses).toEqual([{ kind: "Bleed", stacks: 3 }]);
     });
   });
 
@@ -51,7 +79,18 @@ describe("combatActions", () => {
     });
   });
 
-  describe("playCard", () => {
+  describe("stageCard", () => {
+    it("returns state unchanged when staging an aura with energyReservation exceeding current energyRemaining", () => {
+      const mockCard = createMockAuraCard({ energyReservation: 1 });
+      const state = produce(store.gameState, (draft) => {
+        draft.run.combat = { ...initialCombatState, enemy: createMockEnemy(), energyRemaining: 0, hand: [mockCard] };
+      });
+
+      const updatedState = stageCard(state, mockCard);
+
+      expect(updatedState).toBe(state);
+    });
+
     it("moves card to stagedCards", () => {
       const mockCard = createMockSkillCard({ energyCost: 1 });
       let state = produce(store.gameState, (draft) => {
@@ -267,6 +306,32 @@ describe("combatActions", () => {
       const updatedState = playHand(state);
 
       expect(updatedState).toEqual(state);
+    });
+
+    it("fires onSkillPlay relics after a skill resolves", () => {
+      const card = createMockSkillCard({ tags: ["Attack"], effectId: "exsanguinate" });
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ stagedCards: [card], enemy: createMockEnemy({ hp: 50, statuses: [] }) });
+        draft.run.relics = [createMockRelic({ triggerKind: "onSkillPlay", effectId: "carnage_heart" })];
+      });
+
+      state = playHand(state);
+
+      expect(state.run.combat?.enemy.hp).toBe(40);
+    });
+
+    it("doesn't fire onSkillPlay relics when an aura is committed", () => {
+      const card = createMockAuraCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ stagedCards: [card], enemy: createMockEnemy({ hp: 50, statuses: [] }) });
+        draft.run.relics = [createMockRelic({ triggerKind: "onSkillPlay", effectId: "carnage_heart" })];
+      });
+
+      state = playHand(state);
+
+      expect(state.run.combat?.enemy.hp).toBe(50);
     });
   });
 
@@ -698,6 +763,39 @@ describe("combatActions", () => {
       state = unstageCard(state, card);
 
       expect(state.run.combat?.energyRemaining).toBe(3);
+    });
+  });
+
+  describe("startPlayerTurn", () => {
+    it("draws cards up to a full hand", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState();
+        draft.run.deck = [
+          createMockSkillCard(),
+          createMockSkillCard(),
+          createMockSkillCard(),
+          createMockSkillCard(),
+          createMockSkillCard(),
+          createMockSkillCard(),
+          createMockSkillCard(),
+        ];
+      });
+
+      state = startPlayerTurn(state);
+
+      expect(state.run.deck.length).toBe(2);
+      expect(state.run.combat?.hand.length).toBe(5);
+    });
+
+    it("fires onTurnStart relics after drawing", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState();
+        draft.run.relics = [createMockRelic({ triggerKind: "onTurnStart", effectId: "spreading_rot" })];
+      });
+
+      state = startPlayerTurn(state);
+
+      expect(state.run.combat!.enemy.statuses).toEqual([{ kind: "Bleed", stacks: 1 }]);
     });
   });
 });
