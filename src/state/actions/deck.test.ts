@@ -1,8 +1,8 @@
-import { createMockCombatState, createMockEnemy, createMockSkillCard } from "@/lib/test-helpers";
+import { createMockCombatState, createMockEnemy, createMockRelic, createMockSkillCard } from "@/lib/test-helpers";
 import { produce } from "immer";
 import { initialCombatState } from "../combat-state";
 import { store } from "../store";
-import { addCardToDeck, drawCards } from "./deck";
+import { addCardToDeck, buyCard, buyRelic, drawCards } from "./deck";
 
 describe("deckActions", () => {
   describe("drawCards", () => {
@@ -70,5 +70,61 @@ describe("deckActions", () => {
 
       expect(state.run.deck).toEqual([card]);
     });
+  });
+
+  describe("buyCard", () => {
+    it("adds the card to run.deck", () => {
+      const card = createMockSkillCard();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.deck = [];
+        draft.run.combat = createMockCombatState();
+      });
+
+      state = buyCard(state, card);
+
+      expect(state.run.deck).toEqual([card]);
+    });
+
+    it("deducts the card's price from run.gold", () => {
+      const card = createMockSkillCard({ rarity: "Common" });
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.gold = 40;
+        draft.run.combat = createMockCombatState();
+      });
+
+      state = buyCard(state, card);
+
+      expect(state.run.gold).toEqual(0);
+    });
+  });
+
+  describe("buyRelic", () => {
+    it("adds the relic to run.relics", () => {
+      const relic = createMockRelic();
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.relics = [];
+      });
+
+      state = buyRelic(state, relic);
+
+      expect(state.run.relics).toEqual([relic]);
+    });
+
+    it("deducts the relic's price from run.gold", () => {
+      const relic = createMockRelic({ rarity: "Common" });
+
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.gold = 60;
+        draft.run.relics = [];
+      });
+
+      state = buyRelic(state, relic);
+
+      expect(state.run.gold).toEqual(0);
+    });
+
   });
 });

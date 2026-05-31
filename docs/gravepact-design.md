@@ -75,7 +75,7 @@ Some supports interact specifically with statuses (e.g. "if target is Burning, a
 
 **Relics:**
 
-Passive items held in a separate **relic slot** (max 4), not in the deck. Found in elite fights and shops. Relics modify combat rules globally for the entire run — e.g. "+1 energy on turns you play a Curse," "Bleed stacks deal double damage." These are the run-defining multipliers: the Balatro jokers.
+Passive items held in a separate **relic slot**, not in the deck. Found in elite fights and shops. Relics modify combat rules globally for the entire run — e.g. "+1 energy on turns you play a Curse," "Bleed stacks deal double damage." These are the run-defining multipliers: the Balatro jokers.
 
 **Gold:**
 
@@ -212,7 +212,7 @@ When the player selects a shop node, `MapScene` calls `generateShopInventory(loc
 Two purchase actions in `src/state/actions/deck.ts`:
 
 - `buyCard(state, card): GameState` — appends card to `run.deck`, deducts `getCardPrice(card.rarity)` from `run.gold`
-- `buyRelic(state, relic): GameState` — appends relic to `run.relics` (capped at 4), deducts `getRelicPrice(relic.rarity)` from `run.gold`
+- `buyRelic(state, relic): GameState` — appends relic to `run.relics`, deducts `getRelicPrice(relic.rarity)` from `run.gold`
 
 `getCardPrice` and `getRelicPrice` in `src/engine/shop.ts` map `RewardRarity` to flat constants (flagged for playtesting). Card prices: Common 40g / Uncommon 60g / Rare 90g. Relic prices are one tier higher: Common 60g / Uncommon 90g / Rare 120g. After a purchase the item is added to `purchasedIds` and rendered non-interactive; a **Leave** button returns to `"MAP"`.
 
