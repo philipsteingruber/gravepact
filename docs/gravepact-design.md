@@ -217,6 +217,28 @@ Constants `WEAKEN_PER_STACK` and `BLEED_TICK_DIVISOR` live in `src/lib/constants
 
 - `tickAuras(state: GameState, targets: Target[]): SkillOutput[]` — maps over `combat.activeAuras`, calls `effects[aura.effectId]` for each, returns the array of outputs. Throws on an unregistered `effectId` (always a developer error). Called from `resolveEnemyTurn`; the caller applies each output via `applySkillOutput`.
 
+**Relic trigger system** (`src/engine/relics.ts`, `src/data/relic-effects.ts`, `src/data/relics.ts`):
+
+Relics fire passive effects at specific combat events. Each `Relic` object carries a `triggerKind: RelicTriggerKind` field (`"onCombatStart" | "onTurnStart" | "onSkillPlay"`). A separate relic handler registry in `src/data/relic-effects.ts` maps `effectId → (state: GameState, context: RelicContext) => GameState`, typed with `satisfies` and exporting `RelicEffectId`. `RelicContext` is a discriminated union keyed by `triggerKind`; the `"onSkillPlay"` variant carries a `card: SkillCard` field so handlers can inspect the played skill's tags.
+
+`fireRelicTrigger(state, triggerKind, context): GameState` in `src/engine/relics.ts` loops over `run.relics`, filters by `triggerKind`, and threads state through each matching handler.
+
+Integration points in combat actions:
+
+- `startCombat` calls `fireRelicTrigger(state, "onCombatStart", ...)` after initializing `CombatState`
+- A new `startPlayerTurn(state)` action wraps `drawHand` followed by `fireRelicTrigger(state, "onTurnStart", ...)`. It replaces the bare `drawHand` call in `endTurn` and the scene's post-`startCombat` draw, ensuring `onTurnStart` fires consistently on every turn including the first
+- `playHand`, after a skill resolves, calls `fireRelicTrigger(state, "onSkillPlay", { triggerKind: "onSkillPlay", card: skillCard })`
+
+First relic set (`src/data/relics.ts`):
+
+| Name | Trigger | effectId | Effect |
+| --- | --- | --- | --- |
+| Doedre's Damning | onCombatStart | `doedres_damning` | Enemy begins combat with 3 Bleed |
+| Spreading Rot | onTurnStart | `spreading_rot` | Apply 1 Bleed to the enemy at the start of each player turn |
+| Carnage Heart | onSkillPlay | `carnage_heart` | If skill has Attack tag, deal 2 bonus damage |
+
+All three are Uncommon rarity. Effect values are flagged for playtesting.
+
 **Enemy combat resolution** (`src/engine/combat.ts`):
 
 - `resolveEnemyAttack(enemy, intent: AttackIntent): number` — computes damage dealt to the player: applies `getWeakenMultiplier` to scale down base damage and floors the result. Does not include Bleed bonus — that is applied separately to the enemy. Called internally by `resolveEnemyTurn`; pure and independently testable.
@@ -396,6 +418,16 @@ export const effects = {
 export type EffectId = keyof typeof effects;
 ```
 
+The relic handler registry in `src/data/relic-effects.ts` follows the same pattern with a different handler signature:
+
+```typescript
+export const relicEffects = {
+  doedres_damning: (state, _context) => { /* apply 3 Bleed to enemy */ },
+} satisfies Record<string, (state: GameState, context: RelicContext) => GameState>;
+
+export type RelicEffectId = keyof typeof relicEffects;
+```
+
 **Adding a new skill card requires two things:** a card data object with a matching `effectId`, and the corresponding entry in `effects`. A missing registration throws at `playHand` time when the effect lookup fails.
 
 ### `SkillOutput` — the combat contract
@@ -422,5 +454,5 @@ Support modifications (`resolveSupports`) transform a `SkillOutput` before it re
 - Support-on-Aura interaction (future consideration)
 - `changeBehavior` support modification — deferred until multi-enemy model is in place; will modify the `targets` array in `SkillOutput` to include all active enemies
 - `reduceCost` support modification — deferred until inter-turn cost tracking is in place; will reduce `energyCost` of the next skill played after the combo resolves
-- Does Armor absorb Burn/Bleed tick damage? The Armor description ("absorbs incoming damage 1-per-stack") has no source qualifier, implying it applies to all damage including ticks — but making DoTs armor-piercing would add meaningful depth (DoTs as reliable armor bypass). Currently `tickStatuses` bypasses `resolveIncomingDamage`, so ticks ignore Armor. Resolve this before ticks and `resolveIncomingDamage` are considered settled.
-- What happens in `endTurn` when `reservedEnergy` exceeds `energyMax`? This would result in negative `energyRemaining`. The current code does not guard against it (`energyRemaining = energyMax - reservedEnergy`). Options: (a) clamp to 0, (b) treat as impossible and add a guard in `stageCard` that prevents reserving more than the remaining headroom. Resolve before aura stacking is considered settled.
+- **Settled: ticks pierce Armor.** DoTs are armor-piercing by design — a reliable bypass for armored enemies. `tickStatuses` correctly bypasses `resolveIncomingDamage`. Covered by a test asserting that an enemy with Armor stacks loses HP from tick damage without Armor stacks depleting.
+- **Settled: over-reservation prevented by `stageCard`.** The `stageCard` guard (`energyReservation > energyRemaining`) prevents staging an aura that would over-reserve. Since `energyRemaining` decrements as each aura is committed, total reservation is naturally capped at `energyMax`. Covered by a test asserting that `stageCard` rejects an aura whose cost exceeds current `energyRemaining`.

@@ -28,6 +28,14 @@ src/
   scenes/       # Phaser scenes (Boot, Hub, Map, Combat, Reward)
 ```
 
+**Immer proxy identity:** Inside any `produce` callback, never use `===` or `.includes()` to find cards by reference — array elements accessed through a draft are Immer proxies. Always compare by `.id`.
+
+**Map node lookup:** Never use `map.find(n => n.id === id)!`. Use `getNode(map, id)` from `src/engine/map.ts`, which throws on missing IDs.
+
+**Rendering constants:** `src/constants.ts` is for game logic constants shared across modules. Scene-local constants (colors, dimensions, Y positions) belong in the scene file itself.
+
+**Scenes as orchestrators:** Scenes may sequence actions (e.g. calling `startCombat` then `drawHand`). Extract to a named action only when the branching becomes hard to read. `store.gameState` is the source of truth across scene restarts — read it at the top of `create()` and write back to it after actions.
+
 ## Learning Approach
 
 This is a learning project. When the user is implementing something:
@@ -35,6 +43,7 @@ This is a learning project. When the user is implementing something:
 - Explain the approach and reasoning — do NOT include code snippets or generated code unless the user explicitly asks
 - Let the user write the code
 - Only provide code if they're stuck or explicitly ask
+- **Phaser exception:** For Phaser scene code, code snippets are acceptable since API usage is hard to describe in prose — describe intent first, then show the minimal pattern.
 
 ## Design Doc & Roadmap
 
@@ -67,17 +76,24 @@ Magic numbers (energy costs, card rarity weights, Shard drop rates, status effec
 
 For any non-trivial logic in `engine/` or `state/`, start with a failing test. Skipping TDD is allowed for exploratory or throwaway code, but must be stated explicitly. When guiding implementation, always ask "what test would prove this works?" before discussing how to implement it.
 
-**Pacing:** RED and GREEN are two separate steps. Guide the user to write the test first, confirm it fails, then stop. Only move to implementation after the RED step is complete. Do not combine both steps in one response. Always guide one test at a time — never ask the user to write multiple tests at once.
+**Pacing:** RED and GREEN are two separate steps. Guide the user to write the test first, confirm it fails, then stop. Only move to implementation after the RED step is complete. Do not combine both steps in one response. Always guide one test at a time — never ask the user to write multiple tests at once. When listing test cases upfront as an overview at the start of a TDD session, present all cases — then guide through them one at a time in the red-green cycle.
 
-**Minimal GREEN:** When guiding the GREEN step, describe only the code needed to make the current failing test pass — not the full feature. Do not reference the design doc or describe behaviors that aren't yet tested. If the user implements more than the current test requires, flag it: future tests that cover that behavior will pass immediately without ever being RED, which breaks TDD.
+**Test names:** When asking the user to write a test, always provide the exact test name. Never leave them to name it themselves.
+
+**Minimal GREEN:** When guiding the GREEN step, describe only the code needed to make the current failing test pass — not the full feature. Do not reference the design doc or describe behaviors that aren't yet tested. If the user implements more than the current test requires, flag it — do not praise or approve extra implementation even if the code is correct. Future tests that cover that behavior will pass immediately without ever being RED, which breaks TDD.
+
+**Immediate GREEN:** If a test passes immediately without a prior RED step, explain why (TypeScript constraint, or coincidentally covered by prior code) and note whether it still belongs as documentation.
 
 **Code in TDD guidance:** Describe what the test should assert and why in prose — do not write code blocks. The user writes the code themselves. Only provide code if they're stuck or explicitly ask.
+
+**Evaluate tests before GREEN:** Before telling the user to proceed to GREEN, read the test they wrote and evaluate: is the assertion tight, does it cover both sides of the contract, is the name correct, is it structured per the testing rules? State your findings explicitly before proceeding.
 
 **Fixtures and state:**
 
 - Never mutate shared state. Construct a fresh state object per test using spreads: `{ ...gameState, run: { ...gameState.run, deck: [...] } }`.
 - Extract fixture factory functions (e.g. `createMockSkillCard(overrides?)`) when the same shape is repeated across multiple tests. Wait until duplication is felt — don't create helpers preemptively.
-- Keep factories in the test file unless they're needed across multiple test files.
+- Shared test helpers live in `src/lib/test-helpers.ts` — check there before creating new helper functions.
+- Fixtures requiring active combat state must spread from `initialCombatState`. Never assume `store.gameState.run.combat` is non-null in tests.
 
 **Assertions:**
 
@@ -102,6 +118,10 @@ When workshopping location names, enemy names, card names, or other thematic con
 - **`docs/inspiration/skills.md`** — PoE skill gem names, organized by attribute (Strength/Attack, Dexterity/Ranged, Intelligence/Spell+Curse). Use for Gravepact skill card names.
 - **`docs/inspiration/supports.md`** — PoE support gem names, organized by attribute. Use for Gravepact support card names.
 - **[poewiki.net](https://www.poewiki.net)** — for area names, enemy names, monster lore, and anything not in the above files.
+
+## Engineering Conventions
+
+- When handling all branches of a discriminated union `switch` or `if/else`, add `assertNever(value)` in the final `else` branch. See `src/lib/assert-never.ts`. This catches future union extensions at compile time and adds a runtime safety net.
 
 ## Misc
 

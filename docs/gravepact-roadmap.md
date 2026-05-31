@@ -27,11 +27,10 @@
 - [ ] Support `reduceCost`: reduce next skill's energy cost (requires inter-turn cost tracking)
 - [x] Aura play: move aura to persistent zone, apply `energyReservation` to `energyMax`
 - [x] Aura per-turn effect: tick aura `effectId` at start of each turn
-- [ ] Support orphan prevention: block end-of-turn confirmation if a support has no valid skill
-- [ ] Relic slot: hold up to 4 relics, trigger relic effects at appropriate combat events
+- [x] Relic slot: hold up to 4 relics, trigger relic effects at appropriate combat events
 - [ ] Shop node: buy cards, buy relics, optional card removal
 - [ ] Card removal: remove a card from deck permanently (shop mechanic)
-- [ ] Resolve Armor vs. tick damage: decide whether Burn/Bleed ticks pierce Armor or are absorbed; update `tickStatuses` and `resolveIncomingDamage` accordingly
+- [x] Resolve Armor vs. tick damage: decide whether Burn/Bleed ticks pierce Armor or are absorbed; update `tickStatuses` and `resolveIncomingDamage` accordingly
 - [ ] Card rarity weights: rarity-weighted pool sampling for rewards and shops
 - [ ] Rest site node: choose to heal or upgrade a card
 - [ ] Card upgrade: each card has an upgraded variant with improved effect
