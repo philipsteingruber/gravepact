@@ -45,3 +45,12 @@ export const GOLD_REWARD_BOSS_MAX = 60;
 export const RARITY_WEIGHT_COMMON = 60;
 export const RARITY_WEIGHT_UNCOMMON = 30;
 export const RARITY_WEIGHT_RARE = 10;
+
+// --- Shop ---
+export const CARD_PRICE_COMMON = 40;
+export const CARD_PRICE_UNCOMMON = 60;
+export const CARD_PRICE_RARE = 90;
+
+export const RELIC_PRICE_COMMON = 60;
+export const RELIC_PRICE_UNCOMMON = 90;
+export const RELIC_PRICE_RARE = 120;

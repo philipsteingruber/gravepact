@@ -124,3 +124,6 @@ export type Store = { gameState: GameState };
 
 export type SkillOutput = { damage: number; statuses: StatusEffect[]; targets: Target[] };
 export type StatusTickResult = { enemy: Enemy; totalDamage: number };
+
+// --- Shop ---
+export type ShopInventory = { cards: Card[]; relics: Relic[] };

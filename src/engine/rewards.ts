@@ -1,6 +1,6 @@
 import { assertNever } from "@/lib/assert-never";
 import { RARITY_WEIGHT_COMMON, RARITY_WEIGHT_RARE, RARITY_WEIGHT_UNCOMMON } from "@/lib/constants";
-import type { Card, RewardRarity } from "@/lib/types";
+import type { RewardRarity } from "@/lib/types";
 import { randomBetween } from "@/lib/utils";
 
 const mapRarity = (rarity: RewardRarity): number => {
@@ -11,17 +11,17 @@ const mapRarity = (rarity: RewardRarity): number => {
   } else if (rarity === "Rare") {
     return RARITY_WEIGHT_RARE;
   } else {
-    assertNever(rarity);
+    return assertNever(rarity);
   }
 };
 
-export const sampleRewardCards = (pool: Card[], count: number): Card[] => {
-  let weightedPool: Card[] = [];
+export const sampleRewards = <T extends { rarity: RewardRarity; id: string }>(pool: T[], count: number): T[] => {
+  let weightedPool: T[] = [];
   pool.forEach((card) => {
     weightedPool.push(...Array.from({ length: mapRarity(card.rarity) }, () => card));
   });
 
-  const result: Card[] = [];
+  const result: T[] = [];
   for (let i = 0; i < Math.min(count, pool.length); i++) {
     const index = randomBetween(0, weightedPool.length - 1);
     result.push(weightedPool[index]);

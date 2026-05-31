@@ -1,6 +1,6 @@
 import { createMockSkillCard, repeat } from "@/lib/test-helpers";
 import type { RewardRarity } from "@/lib/types";
-import { sampleRewardCards } from "./rewards";
+import { sampleRewards } from "./rewards";
 
 const cardPool = [
   createMockSkillCard({ id: "card-1", rarity: "Common" }),
@@ -20,7 +20,7 @@ describe("engine/rewards", () => {
     it("returns the requested number of cards", () => {
       const pool = [...cardPool];
 
-      const result = sampleRewardCards(pool, 3);
+      const result = sampleRewards(pool, 3);
 
       expect(result.length).toBe(3);
     });
@@ -29,7 +29,7 @@ describe("engine/rewards", () => {
       repeat(() => {
         const pool = [...cardPool];
 
-        const result = sampleRewardCards(pool, 5);
+        const result = sampleRewards(pool, 5);
         const cardIds = new Set(result.map((card) => card.id));
 
         expect(cardIds.size).toBe(5);
@@ -39,7 +39,7 @@ describe("engine/rewards", () => {
     it("returns fewer cards than requested when pool is smaller than count", () => {
       const pool = [...cardPool.slice(0, 2)];
 
-      const result = sampleRewardCards(pool, 5);
+      const result = sampleRewards(pool, 5);
       const cardIds = new Set(result.map((card) => card.id));
 
       expect(cardIds.size).toBe(2);
@@ -55,7 +55,7 @@ describe("engine/rewards", () => {
         const results: Record<RewardRarity, number> = { Common: 0, Uncommon: 0, Rare: 0 };
 
         for (let i = 0; i < 200; i++) {
-          const card = sampleRewardCards(pool, 1)[0];
+          const card = sampleRewards(pool, 1)[0];
           results[card.rarity] += 1;
         }
 
@@ -68,7 +68,7 @@ describe("engine/rewards", () => {
       repeat(() => {
         const pool = [...cardPool];
 
-        const result = sampleRewardCards(pool, 5);
+        const result = sampleRewards(pool, 5);
 
         result.forEach((card) => expect(pool.includes(card)).toBe(true));
       });

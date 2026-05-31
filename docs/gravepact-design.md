@@ -214,7 +214,7 @@ Two purchase actions in `src/state/actions/deck.ts`:
 - `buyCard(state, card): GameState` — appends card to `run.deck`, deducts `getCardPrice(card.rarity)` from `run.gold`
 - `buyRelic(state, relic): GameState` — appends relic to `run.relics` (capped at 4), deducts `getRelicPrice(relic.rarity)` from `run.gold`
 
-`getCardPrice` and `getRelicPrice` in `src/engine/shop.ts` map `RewardRarity` to flat constants (flagged for playtesting): Common 40g / Uncommon 60g / Rare 90g. Relic prices match card prices at the same tier. After a purchase the item is added to `purchasedIds` and rendered non-interactive; a **Leave** button returns to `"MAP"`.
+`getCardPrice` and `getRelicPrice` in `src/engine/shop.ts` map `RewardRarity` to flat constants (flagged for playtesting). Card prices: Common 40g / Uncommon 60g / Rare 90g. Relic prices are one tier higher: Common 60g / Uncommon 90g / Rare 120g. After a purchase the item is added to `purchasedIds` and rendered non-interactive; a **Leave** button returns to `"MAP"`.
 
 **Status effects** (`src/engine/statuses.ts`):
 
@@ -246,11 +246,11 @@ Integration points in combat actions:
 
 First relic set (`src/data/relics.ts`):
 
-| Name | Trigger | effectId | Effect |
-| --- | --- | --- | --- |
-| Doedre's Damning | onCombatStart | `doedres_damning` | Enemy begins combat with 3 Bleed |
-| Spreading Rot | onTurnStart | `spreading_rot` | Apply 1 Bleed to the enemy at the start of each player turn |
-| Carnage Heart | onSkillPlay | `carnage_heart` | If skill has Attack tag, deal 2 bonus damage |
+| Name             | Trigger       | effectId          | Effect                                                      |
+| ---------------- | ------------- | ----------------- | ----------------------------------------------------------- |
+| Doedre's Damning | onCombatStart | `doedres_damning` | Enemy begins combat with 3 Bleed                            |
+| Spreading Rot    | onTurnStart   | `spreading_rot`   | Apply 1 Bleed to the enemy at the start of each player turn |
+| Carnage Heart    | onSkillPlay   | `carnage_heart`   | If skill has Attack tag, deal 2 bonus damage                |
 
 All three are Uncommon rarity. Effect values are flagged for playtesting.
 
@@ -377,8 +377,8 @@ All support cards are Common rarity.
 
 **Aura cards:**
 
-| Name          | Cost (reserved) | effectId             | Effect                                               |
-| ------------- | --------------- | -------------------- | ---------------------------------------------------- |
+| Name          | Cost (reserved) | effectId             | Effect                                                |
+| ------------- | --------------- | -------------------- | ----------------------------------------------------- |
 | Sanguine Rite | 1               | `sanguine_rite_tick` | At the start of each turn, apply 1 Bleed to the enemy |
 
 Sanguine Rite is Common rarity.
