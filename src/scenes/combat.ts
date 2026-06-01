@@ -1,10 +1,24 @@
 import { skillCards } from "@/data/cards/skills";
 import { supportCards } from "@/data/cards/supports";
-import { CARD_HEIGHT, CARD_SPACING, CARD_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH } from "@/lib/constants";
+import { getNode } from "@/engine/map";
+import {
+  CARD_HEIGHT,
+  CARD_SPACING,
+  CARD_WIDTH,
+  GOLD_REWARD_BOSS_MAX,
+  GOLD_REWARD_BOSS_MIN,
+  GOLD_REWARD_ELITE_MAX,
+  GOLD_REWARD_ELITE_MIN,
+  GOLD_REWARD_STANDARD_MAX,
+  GOLD_REWARD_STANDARD_MIN,
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+} from "@/lib/constants";
 import { addHoverStyle, renderCard } from "@/lib/scene-utils";
 import { createMockEnemy } from "@/lib/test-helpers";
 import type { Card, CombatState, GameState } from "@/lib/types";
-import { endCombat, endTurn, playHand, resolveEnemyTurn, stageCard, startCombat, unstageCard } from "@/state/actions/combat";
+import { randomBetween } from "@/lib/utils";
+import { awardGold, endCombat, endTurn, playHand, resolveEnemyTurn, stageCard, startCombat, unstageCard } from "@/state/actions/combat";
 import { store } from "@/state/store";
 import { produce } from "immer";
 import Phaser from "phaser";
@@ -192,6 +206,18 @@ export class CombatScene extends Phaser.Scene {
 const handlePostAction = (state: GameState, scene: Phaser.Scenes.ScenePlugin): void => {
   if (state.run.combat?.enemy.hp ?? 1 <= 0) {
     store.gameState = endCombat(state);
+
+    const currentNodeKind = getNode(store.gameState.run.map, store.gameState.run.currentNodeId!).kind;
+    let goldAmount: number = 0;
+    if (currentNodeKind === "boss") {
+      goldAmount = randomBetween(GOLD_REWARD_BOSS_MIN, GOLD_REWARD_BOSS_MAX);
+    } else if (currentNodeKind === "elite") {
+      goldAmount = randomBetween(GOLD_REWARD_ELITE_MIN, GOLD_REWARD_ELITE_MAX);
+    } else if (currentNodeKind === "combat") {
+      goldAmount = randomBetween(GOLD_REWARD_STANDARD_MIN, GOLD_REWARD_STANDARD_MAX);
+    }
+    store.gameState = awardGold(store.gameState, goldAmount);
+
     scene.start("REWARD");
   } else {
     scene.restart();

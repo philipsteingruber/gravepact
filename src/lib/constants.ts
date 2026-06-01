@@ -3,6 +3,7 @@ export const SCREEN_WIDTH = 1920 * (2 / 3);
 export const SCREEN_HEIGHT = 1080 * (2 / 3);
 
 export const CARD_WIDTH = 140;
+export const RELIC_WIDTH = CARD_WIDTH + 20;
 export const CARD_HEIGHT = 160;
 export const CARD_SPACING = 10;
 

@@ -1,5 +1,8 @@
 import { bosses, enemies } from "@/data/enemies";
+import { locations } from "@/data/locations";
+import { relics } from "@/data/relics";
 import { getNode, groupNodesByLayer } from "@/engine/map";
+import { generateShopInventory } from "@/engine/shop";
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "@/lib/constants";
 import type { Enemy, GameState, MapNode } from "@/lib/types";
 import { pickRandom } from "@/lib/utils";
@@ -102,9 +105,12 @@ export class MapScene extends Phaser.Scene {
       } else {
         enemy = bosses.find((boss) => boss.id === node.assignedEnemyId)!;
       }
-      store.gameState = startCombat(store.gameState, enemy);
+
+      store.gameState = startCombat(store.gameState, enemy!);
       store.gameState = startPlayerTurn(store.gameState);
       this.scene.start("COMBAT");
+    } else if (node.kind === "shop") {
+      this.scene.start("SHOP", { inventory: generateShopInventory(locations[store.gameState.run.locationId].cardPool, relics) });
     } else {
       this.scene.restart();
     }
