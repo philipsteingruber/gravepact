@@ -36,7 +36,7 @@ export type SupportCard = {
 };
 export type AuraCard = { kind: "aura"; effectId: string; energyReservation: number };
 
-export type BaseCard = { id: string; name: string; rarity: RewardRarity };
+export type BaseCard = { id: string; name: string; description: string; rarity: RewardRarity };
 export type Card = BaseCard & (SkillCard | SupportCard | AuraCard);
 
 // --- Relics ---
@@ -47,7 +47,14 @@ export type RelicContext =
   | { triggerKind: "onCombatStart" }
   | { triggerKind: "onTurnStart" }
   | { triggerKind: "onSkillPlay"; card: SkillCard };
-export type Relic = { id: string; name: string; rarity: RewardRarity; effectId: RelicEffectId; triggerKind: RelicTriggerKind };
+export type Relic = {
+  id: string;
+  name: string;
+  description: string;
+  rarity: RewardRarity;
+  effectId: RelicEffectId;
+  triggerKind: RelicTriggerKind;
+};
 
 // --- Enemies ---
 
@@ -126,4 +133,5 @@ export type SkillOutput = { damage: number; statuses: StatusEffect[]; targets: T
 export type StatusTickResult = { enemy: Enemy; totalDamage: number };
 
 // --- Shop ---
+
 export type ShopInventory = { cards: Card[]; relics: Relic[] };

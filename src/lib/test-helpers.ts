@@ -1,6 +1,8 @@
 import { initialCombatState } from "@/state/combat-state";
 import type { AuraCard, BaseCard, Card, CombatState, Enemy, MapNode, Relic, SkillCard, SupportCard } from "./types";
 
+// --- Mock Factories ---
+
 export const createMockEnemy = (overrides?: Partial<Enemy>): Enemy => {
   return {
     id: "mock_enemy",
@@ -82,6 +84,8 @@ export const createMockCombatState = (overrides?: Partial<CombatState>): CombatS
     ...overrides,
   };
 };
+
+// --- Test Utilities ---
 
 const ITERATIONS = 50;
 export const repeat = (fn: () => void) => {

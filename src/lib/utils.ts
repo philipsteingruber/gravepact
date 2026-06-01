@@ -1,3 +1,5 @@
+// --- Randomness ---
+
 export const randomBetween = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 export const pickRandom = <T>(arr: T[], count: number): T[] => {
@@ -8,6 +10,8 @@ export const pickRandom = <T>(arr: T[], count: number): T[] => {
   }
   return shuffled.slice(0, count);
 };
+
+// --- Array Utilities ---
 
 export const shuffle = <T>(arr: T[]): T[] => {
   if (arr.length === 0) return arr;

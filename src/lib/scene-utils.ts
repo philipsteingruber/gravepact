@@ -1,6 +1,8 @@
 import { CARD_HEIGHT, CARD_WIDTH, RELIC_WIDTH } from "./constants";
 import type { Card, Relic } from "./types";
 
+// --- Card Rendering ---
+
 export const renderCard = (scene: Phaser.Scene, x: number, y: number, card: Card, onClick: () => void, color?: number) => {
   scene.add
     .rectangle(x, y, CARD_WIDTH, CARD_HEIGHT, color ?? (card.kind === "support" ? 0x4a2d6e : 0x2d4a6e))
@@ -23,6 +25,8 @@ export const renderCard = (scene: Phaser.Scene, x: number, y: number, card: Card
   return scene;
 };
 
+// --- Relic Rendering ---
+
 export const renderRelic = (scene: Phaser.Scene, x: number, y: number, relic: Relic, onClick: () => void) => {
   scene.add.rectangle(x, y, RELIC_WIDTH, CARD_HEIGHT, 0x6e4a2d).setOrigin(0, 0).setInteractive().on("pointerdown", onClick);
 
@@ -30,6 +34,8 @@ export const renderRelic = (scene: Phaser.Scene, x: number, y: number, relic: Re
 
   return scene;
 };
+
+// --- Interaction ---
 
 export const addHoverStyle = (obj: Phaser.GameObjects.Rectangle, defaultColor: number, hoverColor: number) => {
   obj.on("pointerover", () => obj.setFillStyle(hoverColor)).on("pointerout", () => obj.setFillStyle(defaultColor));

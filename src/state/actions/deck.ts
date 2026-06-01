@@ -2,6 +2,8 @@ import { getCardPrice, getRelicPrice } from "@/engine/shop";
 import type { Card, GameState, Relic } from "@/lib/types";
 import { produce } from "immer";
 
+// --- Draw ---
+
 export const drawCards = (state: GameState, count: number): GameState => {
   if (!state.run.combat) return state;
 
@@ -10,11 +12,15 @@ export const drawCards = (state: GameState, count: number): GameState => {
   });
 };
 
+// --- Collection Management ---
+
 export const addCardToDeck = (state: GameState, card: Card): GameState => {
   return produce(state, (draft) => {
     draft.run.deck.push(card);
   });
 };
+
+// --- Shop Purchases ---
 
 export const buyCard = (state: GameState, card: Card): GameState => {
   return produce(state, (draft) => {

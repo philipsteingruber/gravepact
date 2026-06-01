@@ -129,11 +129,13 @@ const assignNodeTypes = (generatedMap: GeneratedMap, enemyPool: Enemy[]) => {
   });
 };
 
-// --- Helpers ---
+// --- Exported Helpers ---
 
-export const calculateLayersCount = (generatedMap: GeneratedMap) => Array.from(new Set(generatedMap.map((node) => node.layer))).length;
+export const calculateLayersCount = (generatedMap: GeneratedMap) =>
+  Array.from(new Set(generatedMap.map((node) => node.layer))).length;
 
-export const calculateMaxLayer = (generatedMap: GeneratedMap) => Math.max(...generatedMap.map((node) => node.layer));
+export const calculateMaxLayer = (generatedMap: GeneratedMap) =>
+  Math.max(...generatedMap.map((node) => node.layer));
 
 export const groupNodesByLayer = (generatedMap: GeneratedMap) =>
   generatedMap.reduce(
@@ -145,7 +147,8 @@ export const groupNodesByLayer = (generatedMap: GeneratedMap) =>
     {} as Record<number, GeneratedMap>,
   );
 
-export const getAllConnections = (generatedMap: GeneratedMap) => new Set(generatedMap.flatMap((node) => node.connections));
+export const getAllConnections = (generatedMap: GeneratedMap) =>
+  new Set(generatedMap.flatMap((node) => node.connections));
 
 export const getNode = (nodes: MapNode[], id: string): MapNode => {
   const node = nodes.find((node) => node.id === id);

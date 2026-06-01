@@ -9,6 +9,7 @@ import { store } from "@/state/store";
 import { produce } from "immer";
 import Phaser from "phaser";
 
+// --- Layout ---
 const GOLD_Y = 40;
 
 const SECTION_LABEL_X = 85;
@@ -28,9 +29,9 @@ const BUY_BUTTON_HEIGHT = 30;
 
 const LEAVE_BUTTON_WIDTH = 120;
 const LEAVE_BUTTON_HEIGHT = 50;
-
 const LEAVE_BUTTON_Y = SCREEN_HEIGHT - 60;
 
+// --- Colors ---
 const BUY_BUTTON_COLOR = 0x2a4a2a;
 const BUY_BUTTON_HOVER_COLOR = 0x3a6a3a;
 const BUY_BUTTON_DISABLED_COLOR = 0x2a2a2a;
@@ -63,9 +64,11 @@ export class ShopScene extends Phaser.Scene {
       });
     }
 
+    // Gold display
     this.add.text(SCREEN_WIDTH / 2, GOLD_Y, "Gold: ").setOrigin(1, 0);
     this.add.text(SCREEN_WIDTH / 2, GOLD_Y, store.gameState.run.gold.toString()).setOrigin(0, 0);
 
+    // Cards section
     this.add.text(SECTION_LABEL_X, CARDS_LABEL_Y, "Cards").setOrigin(0.5, 0);
     this.inventory.cards.forEach((card, i) => {
       const canAfford = getCardPrice(card) <= store.gameState.run.gold;
@@ -104,6 +107,7 @@ export class ShopScene extends Phaser.Scene {
         .setOrigin(0.5);
     });
 
+    // Relics section
     this.add.text(SECTION_LABEL_X, RELICS_LABEL_Y, "Relics").setOrigin(0.5, 0);
     this.inventory.relics.forEach((relic, i) => {
       const canAfford = getRelicPrice(relic) <= store.gameState.run.gold;

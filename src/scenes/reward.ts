@@ -6,6 +6,7 @@ import { addCardToDeck } from "@/state/actions/deck";
 import { store } from "@/state/store";
 import Phaser from "phaser";
 
+// --- Colors ---
 const SKIP_BUTTON_COLOR = 0x3a2a2a;
 const SKIP_BUTTON_HOVER_COLOR = 0x5a3a3a;
 

@@ -3,6 +3,8 @@ import { RARITY_WEIGHT_COMMON, RARITY_WEIGHT_RARE, RARITY_WEIGHT_UNCOMMON } from
 import type { RewardRarity } from "@/lib/types";
 import { randomBetween } from "@/lib/utils";
 
+// --- Internal Helpers ---
+
 const mapRarity = (rarity: RewardRarity): number => {
   if (rarity === "Common") {
     return RARITY_WEIGHT_COMMON;

@@ -59,6 +59,8 @@ export const getBleedAttackBonus = (enemy: Enemy): number => {
   return getStatusStacks(enemy, "Bleed");
 };
 
+// --- Internal Helpers ---
+
 const getStatusStacks = (enemy: Enemy, kind: StatusEffectKind): number => {
   const status = enemy.statuses.find((status) => status.kind === kind);
   if (!status) return 0;

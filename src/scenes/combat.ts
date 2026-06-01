@@ -23,7 +23,7 @@ import { store } from "@/state/store";
 import { produce } from "immer";
 import Phaser from "phaser";
 
-// --- Rendering Constants ---
+// --- Panel Layout ---
 const ENEMY_PANEL_HEIGHT = 220;
 const PLAYER_STATUS_PANEL_HEIGHT = 50;
 const STAGING_ZONE_PANEL_HEIGHT = 180;
@@ -31,12 +31,14 @@ const HAND_AREA_PANEL_HEIGHT = 180;
 const ACTION_BUTTONS_PANEL_HEIGHT = SCREEN_HEIGHT - ENEMY_PANEL_HEIGHT - STAGING_ZONE_PANEL_HEIGHT - HAND_AREA_PANEL_HEIGHT - 80;
 const PANEL_GAP = 5;
 
+// --- Panel Colors ---
 const ENEMY_PANEL_FILL_COLOR = 0x1a1a2e;
 const PLAYER_STATUS_PANEL_FILL_COLOR = 0x252540;
 const STAGING_ZONE_PANEL_FILL_COLOR = 0x1e1e38;
 const HAND_AREA_PANEL_FILL_COLOR = 0x12121f;
 const ACTION_BUTTONS_PANEL_FILL_COLOR = 0x0f0f1f;
 
+// --- Button Colors ---
 const PLAY_HAND_BUTTON_COLOR = 0x2a4a2a;
 const PLAY_HAND_BUTTON_HOVER_COLOR = 0x3a6a3a;
 const PLAY_HAND_BUTTON_DISABLED_COLOR = 0x1a1a1a;
@@ -44,7 +46,7 @@ const PLAY_HAND_BUTTON_DISABLED_COLOR = 0x1a1a1a;
 const END_TURN_BUTTON_COLOR = 0x4a2a2a;
 const END_TURN_BUTTON_HOVER_COLOR = 0x6a3a3a;
 
-// --- Computed Y positions ---
+// --- Computed Panel Y Positions ---
 const playerStatusY = ENEMY_PANEL_HEIGHT + PANEL_GAP;
 
 const stagingZoneY = playerStatusY + PLAYER_STATUS_PANEL_HEIGHT + PANEL_GAP;

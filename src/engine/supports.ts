@@ -13,6 +13,7 @@ export const filterCompatibleMods = ({ skill, supports }: { skill: SkillCard; su
     .map((support) => support.effect);
 };
 
+
 export const resolveSupports = ({ skillOutput, mods }: { skillOutput: SkillOutput; mods: SupportModification[] }): SkillOutput => {
   const result = { ...skillOutput };
 

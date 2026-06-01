@@ -11,12 +11,16 @@ import { produce } from "immer";
 import { initialCombatState } from "../combat-state";
 import { drawCards } from "./deck";
 
+// --- Combat Lifecycle ---
+
 export const startCombat = (state: GameState, enemy: Enemy) => {
   state = produce(state, (draft) => {
     draft.run.combat = { ...initialCombatState, enemy };
   });
   return fireRelicTrigger(state, { triggerKind: "onCombatStart" });
 };
+
+// --- Card Management ---
 
 export const drawHand = (state: GameState) => {
   if (!state.run.combat) return state;
@@ -136,6 +140,8 @@ export const playHand = (state: GameState) => {
   });
 };
 
+// --- Turn & Combat Ending ---
+
 export const endTurn = (state: GameState) => {
   if (!state.run.combat) return state;
 
@@ -167,6 +173,8 @@ export const endCombat = (state: GameState) => {
     draft.run.combat = null;
   });
 };
+
+// --- Skill & Enemy Resolution ---
 
 export const applySkillOutput = (state: GameState, skillOutput: SkillOutput): GameState => {
   if (!state.run.combat) return state;
@@ -218,6 +226,8 @@ export const startPlayerTurn = (state: GameState): GameState => {
 
   return state;
 };
+
+// --- Economy ---
 
 export const awardGold = (state: GameState, amount: number): GameState => {
   return produce(state, (draft) => {

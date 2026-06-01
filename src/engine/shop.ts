@@ -11,6 +11,8 @@ import type { Card, Relic, ShopInventory } from "@/lib/types";
 import { randomBetween } from "@/lib/utils";
 import { sampleRewards } from "./rewards";
 
+// --- Pricing ---
+
 export const getCardPrice = (card: Card): number => {
   if (card.rarity === "Common") {
     return CARD_PRICE_COMMON;
@@ -35,6 +37,11 @@ export const getRelicPrice = (relic: Relic): number => {
   }
 };
 
+// --- Inventory Generation ---
+
 export const generateShopInventory = (cardPool: Card[], relicPool: Relic[]): ShopInventory => {
-  return { cards: sampleRewards(cardPool, randomBetween(4, 5)), relics: sampleRewards(relicPool, randomBetween(1, 2)) };
+  return {
+    cards: sampleRewards(cardPool, randomBetween(4, 5)),
+    relics: sampleRewards(relicPool, randomBetween(1, 2)),
+  };
 };

@@ -11,6 +11,7 @@ import { selectNode } from "@/state/actions/map";
 import { store } from "@/state/store";
 import Phaser from "phaser";
 
+// --- Layout ---
 const LAYER_WIDTH = 150;
 const NODE_RADIUS = 20;
 
