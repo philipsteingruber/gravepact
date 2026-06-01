@@ -23,15 +23,18 @@
 
 ## Phase 2 — Full Card System
 
-- [ ] Support `changeBehavior`: multi-target skill modification (requires multi-enemy model)
-- [ ] Support `reduceCost`: reduce next skill's energy cost (requires inter-turn cost tracking)
 - [x] Aura play: move aura to persistent zone, apply `energyReservation` to `energyMax`
 - [x] Aura per-turn effect: tick aura `effectId` at start of each turn
 - [x] Relic slot: hold up to 4 relics, trigger relic effects at appropriate combat events
-- [ ] Shop node: buy cards, buy relics
+- [x] Shop node: buy cards, buy relics
+- [ ] Card/relic descriptions: surface card and relic text (name, type, cost, description) in the UI so the player doesn't need to memorize effects
 - [ ] Basic starter cards: define generic Attack/Block starter cards; populate `initialRunState` with them (replaced by archetype starter decks in Phase 3)
 - [ ] Card removal: remove a card from deck permanently (shop mechanic)
 - [x] Resolve Armor vs. tick damage: decide whether Burn/Bleed ticks pierce Armor or are absorbed; update `tickStatuses` and `resolveIncomingDamage` accordingly
+- [ ] Multi-enemy combat: support multiple active enemies per fight, update targeting model and combat UI
+- [ ] Player status effects: apply Burn, Bleed, Weaken to the player; implement `debuff` enemy intent
+- [ ] Support `changeBehavior`: multi-target skill modification (requires multi-enemy model)
+- [ ] Support `reduceCost`: reduce next skill's energy cost (requires inter-turn cost tracking)
 - [ ] Card rarity weights: rarity-weighted pool sampling for rewards and shops
 - [ ] Rest site node: choose to heal or upgrade a card
 - [ ] Card upgrade: each card has an upgraded variant with improved effect
