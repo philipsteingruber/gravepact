@@ -1,6 +1,10 @@
 import { CARD_HEIGHT, CARD_WIDTH, RELIC_WIDTH } from "./constants";
 import type { Card, Relic } from "./types";
 
+export const CARD_DESCRIPTION_Y_OFFSET = CARD_HEIGHT / 2 + 40; // below energy pips
+export const CARD_DESCRIPTION_FONT_SIZE = "11px";
+export const CARD_DESCRIPTION_LINE_HEIGHT = 14;
+
 // --- Card Rendering ---
 
 export const renderCard = (scene: Phaser.Scene, x: number, y: number, card: Card, onClick: () => void, color?: number) => {
@@ -21,6 +25,9 @@ export const renderCard = (scene: Phaser.Scene, x: number, y: number, card: Card
   scene.add
     .text(x + CARD_WIDTH / 2, y + CARD_HEIGHT / 2 + 20, "◆".repeat(card.kind === "aura" ? card.energyReservation : card.energyCost))
     .setOrigin(0.5, 0);
+  scene.add
+    .text(x + CARD_WIDTH / 2, y + CARD_DESCRIPTION_Y_OFFSET, card.description, { fontSize: CARD_DESCRIPTION_FONT_SIZE })
+    .setOrigin(0.5, 0);
 
   return scene;
 };
@@ -31,6 +38,12 @@ export const renderRelic = (scene: Phaser.Scene, x: number, y: number, relic: Re
   scene.add.rectangle(x, y, RELIC_WIDTH, CARD_HEIGHT, 0x6e4a2d).setOrigin(0, 0).setInteractive().on("pointerdown", onClick);
 
   scene.add.text(x + RELIC_WIDTH / 2, y + 10, relic.name).setOrigin(0.5, 0);
+
+  const [trigger, effect] = relic.description.split("\n");
+  scene.add.text(x + RELIC_WIDTH / 2, y + CARD_DESCRIPTION_Y_OFFSET, trigger, { fontSize: CARD_DESCRIPTION_FONT_SIZE }).setOrigin(0.5, 0);
+  if (effect) {
+    scene.add.text(x + RELIC_WIDTH / 2, y + CARD_DESCRIPTION_Y_OFFSET + CARD_DESCRIPTION_LINE_HEIGHT, effect, { fontSize: CARD_DESCRIPTION_FONT_SIZE }).setOrigin(0.5, 0);
+  }
 
   return scene;
 };

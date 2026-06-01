@@ -27,7 +27,7 @@
 - [x] Aura per-turn effect: tick aura `effectId` at start of each turn
 - [x] Relic slot: hold up to 4 relics, trigger relic effects at appropriate combat events
 - [x] Shop node: buy cards, buy relics
-- [ ] Card/relic descriptions: surface card and relic text (name, type, cost, description) in the UI so the player doesn't need to memorize effects
+- [x] Card/relic descriptions: surface card and relic text (name, type, cost, description) in the UI so the player doesn't need to memorize effects
 - [ ] Basic starter cards: define generic Attack/Block starter cards; populate `initialRunState` with them (replaced by archetype starter decks in Phase 3)
 - [ ] Card removal: remove a card from deck permanently (shop mechanic)
 - [x] Resolve Armor vs. tick damage: decide whether Burn/Bleed ticks pierce Armor or are absorbed; update `tickStatuses` and `resolveIncomingDamage` accordingly
@@ -40,6 +40,7 @@
 - [ ] Card upgrade: each card has an upgraded variant with improved effect
 - [ ] Elite combat: harder enemy with better post-fight reward
 - [ ] First full location: complete enemy pool (6–8 enemies), boss, themed node names
+- [ ] Runtime-generated card descriptions: derive description text from effect parameters automatically so balance changes don't require manual string updates
 
 ## Phase 3 — Meta-Progression
 

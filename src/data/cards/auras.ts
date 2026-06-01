@@ -7,6 +7,7 @@ export const auraCards: Card[] = [
     energyReservation: 1,
     id: "sanguine_rite",
     name: "Sanguine Rite",
+    description: "Start of each turn: apply 1 Bleed",
     rarity: "Common",
   },
 ];

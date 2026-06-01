@@ -25,3 +25,4 @@ export const relicEffects = {
 } satisfies Record<string, (state: GameState, context: RelicContext) => GameState>;
 
 export type RelicEffectId = keyof typeof relicEffects;
+

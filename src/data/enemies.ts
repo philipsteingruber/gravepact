@@ -2,6 +2,8 @@ import type { Enemy } from "@/lib/types";
 
 const defaultFields: Pick<Enemy, "intentIndex" | "statuses"> = { intentIndex: 0, statuses: [] };
 
+// --- Regular Enemies ---
+
 export const enemies: Enemy[] = [
   {
     id: "drowned_exile",
@@ -40,6 +42,8 @@ export const enemies: Enemy[] = [
     ...defaultFields,
   },
 ];
+
+// --- Bosses ---
 
 export const bosses: Enemy[] = [
   {

@@ -47,9 +47,17 @@ This is a learning project. When the user is implementing something:
 
 ## Design Doc & Roadmap
 
-`gravepact-design.md` is a **living document**. Treat it as the authoritative guide for implementation decisions — always read the relevant section before making decisions. If a task results in something that differs from or adds to what's written, **update the design doc** before moving on.
+`gravepact-design.md` is a **living document**. Treat it as the authoritative guide for implementation decisions — always read the relevant section before making decisions, and state which section you read when describing a recommendation. If a task results in something that differs from or adds to what's written, **update the design doc** before moving on.
+
+When an edit removes content from the design doc, quote the exact passage that will be deleted and wait for confirmation before proceeding.
 
 When completing roadmap items, tick them off in `gravepact-roadmap.md`.
+
+When proposing where to place a new roadmap item, quote the surrounding items by name so the user can confirm placement without reading the file themselves.
+
+Roadmap items describe the player-facing problem or goal, not the implementation approach. Write "Card readability" not "Card tooltip system".
+
+The `next-feature-design` skill ends at the Stage 4 design summary. Do not follow it with implementation planning or invoke any other skill — the user transitions to implementation separately.
 
 ## Design Gaps
 
@@ -76,7 +84,11 @@ Magic numbers (energy costs, card rarity weights, Shard drop rates, status effec
 
 For any non-trivial logic in `engine/` or `state/`, start with a failing test. Skipping TDD is allowed for exploratory or throwaway code, but must be stated explicitly. When guiding implementation, always ask "what test would prove this works?" before discussing how to implement it.
 
+**Stub before test:** Before writing a test for a new function, create a typed stub in the implementation file first — correct signature, body returns a default value. This gives the user type hints while writing the test without providing any real implementation. The no-code rule applies to stubs too; write only the signature and return type placeholder, not the logic.
+
 **Pacing:** RED and GREEN are two separate steps. Guide the user to write the test first, confirm it fails, then stop. Only move to implementation after the RED step is complete. Do not combine both steps in one response. Always guide one test at a time — never ask the user to write multiple tests at once. When listing test cases upfront as an overview at the start of a TDD session, present all cases — then guide through them one at a time in the red-green cycle.
+
+**Result shorthand:** When the user replies with just "red" or "green", treat it as confirmation that they ran the test and it failed/passed respectively. Infer the result and proceed — do not ask them to elaborate or rerun.
 
 **Test names:** When asking the user to write a test, always provide the exact test name. Never leave them to name it themselves.
 
@@ -94,6 +106,8 @@ For any non-trivial logic in `engine/` or `state/`, start with a failing test. S
 - Extract fixture factory functions (e.g. `createMockSkillCard(overrides?)`) when the same shape is repeated across multiple tests. Wait until duplication is felt — don't create helpers preemptively.
 - Shared test helpers live in `src/lib/test-helpers.ts` — check there before creating new helper functions.
 - Fixtures requiring active combat state must spread from `initialCombatState`. Never assume `store.gameState.run.combat` is non-null in tests.
+- When using `createMockRelic()` in tests that rely on a specific trigger kind or effect, always pass explicit overrides — the default trigger kind is `'onCombatStart'`. Never assume a mock relic's defaults align with the scenario under test.
+- When writing factory functions that accept `overrides?`, verify the spread is actually applied in the return value — a missing `...overrides` silently ignores all fixture customization.
 
 **Assertions:**
 

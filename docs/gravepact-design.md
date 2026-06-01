@@ -122,6 +122,12 @@ After each combat, choose 1 of 3 cards from the current location's pool. Shops o
 
 **Card rarity:** Common, Uncommon, Rare. Rarer cards have stronger or more unusual effects, not just bigger numbers.
 
+**Card and relic descriptions:**
+
+Each `Card` (via `BaseCard`) and `Relic` carries a `description: string` field — a manually-written, functional one-liner. Format: `"8 damage, apply 2 Bleed"`. Support descriptions lead with their compatible tags in brackets: `"[Attack] 1.5× damage"`. Aura descriptions use the trigger phrasing: `"Start of each turn: apply 1 Bleed"`. Relic descriptions split the trigger and effect across two lines using `\n`: `"Combat start:\nenemy gains 3 Bleed"`.
+
+Descriptions are rendered by `renderCard` and `renderRelic` in `src/lib/scene-utils.ts`. Currently static strings; runtime-generated descriptions (derived from effect parameters) are a future Phase 2 enhancement once balance values stabilize.
+
 ---
 
 ## Section 4 — Meta-Progression
