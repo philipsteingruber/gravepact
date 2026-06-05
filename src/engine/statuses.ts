@@ -4,23 +4,12 @@ import { produce } from "immer";
 
 export const applyStatuses = (enemy: Enemy, statuses: StatusEffect[]): Enemy => {
   return produce(enemy, (draft) => {
-    statuses.forEach((newStatus) => {
-      if (draft.statuses.some((oldStatus) => oldStatus.kind === newStatus.kind)) {
-        const index = draft.statuses.findIndex((oldStatus) => oldStatus.kind === newStatus.kind);
-        draft.statuses.splice(index, 1, {
-          kind: newStatus.kind,
-          stacks: newStatus.stacks + draft.statuses[index].stacks,
-        });
-      } else {
-        draft.statuses.push(newStatus);
-      }
-    });
+    draft.statuses = mergeStatuses(draft.statuses, statuses);
   });
 };
 
 export const tickStatuses = (enemy: Enemy): StatusTickResult => {
-  const totalDamage =
-    getStatusStacks(enemy, "Burn") + Math.floor(getStatusStacks(enemy, "Bleed") * BLEED_TICK_MULTIPLIER);
+  const totalDamage = getStatusStacks(enemy, "Burn") + Math.floor(getStatusStacks(enemy, "Bleed") * BLEED_TICK_MULTIPLIER);
   return {
     enemy: produce(enemy, (draft) => {
       draft.hp = Math.max(0, draft.hp - totalDamage);
@@ -59,6 +48,19 @@ export const getBleedAttackBonus = (enemy: Enemy): number => {
   return getStatusStacks(enemy, "Bleed");
 };
 
+export const mergeStatuses = (existing: StatusEffect[], incoming: StatusEffect[]): StatusEffect[] => {
+  const result: StatusEffect[] = [...existing];
+
+  incoming.forEach((status) => {
+    const index = existing.findIndex((s) => s.kind === status.kind);
+    if (index !== -1) {
+      result[index] = { kind: status.kind, stacks: status.stacks + existing[index].stacks };
+    } else {
+      result.push(status);
+    }
+  });
+  return result;
+};
 // --- Internal Helpers ---
 
 const getStatusStacks = (enemy: Enemy, kind: StatusEffectKind): number => {

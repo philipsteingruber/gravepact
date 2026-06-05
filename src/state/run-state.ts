@@ -1,5 +1,4 @@
-import { skillCards } from "@/data/cards/skills";
-import { supportCards } from "@/data/cards/supports";
+import { starterCards } from "@/data/cards/starter";
 import { bosses, enemies } from "@/data/enemies";
 import { generateMap } from "@/engine/map";
 import { BASE_MAX_HEALTH } from "@/lib/constants";
@@ -8,7 +7,10 @@ import { shuffle } from "@/lib/utils";
 
 export const initialRunState = {
   // Collection
-  deck: shuffle([...skillCards, ...supportCards]), // TODO: Placeholder
+  deck: shuffle([
+    ...Array.from({ length: 6 }, () => structuredClone(starterCards[0])), // Strike
+    ...Array.from({ length: 4 }, () => structuredClone(starterCards[1])), // Fortify
+  ]),
   relics: [],
   gold: 0,
 

@@ -10,4 +10,5 @@ export const initialCombatState = {
   originalHandOrder: [],
   hand: [],
   discardPile: [],
+  playerStatuses: [],
 } satisfies Omit<CombatState, "enemy">;

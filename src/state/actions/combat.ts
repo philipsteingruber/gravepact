@@ -2,7 +2,7 @@ import { effects } from "@/data/effects";
 import { tickAuras } from "@/engine/aura";
 import { resolveEnemyAttack } from "@/engine/combat";
 import { fireRelicTrigger } from "@/engine/relics";
-import { applyStatuses, getBleedAttackBonus, resolveIncomingDamage, tickStatuses } from "@/engine/statuses";
+import { applyStatuses, getBleedAttackBonus, mergeStatuses, resolveIncomingDamage, tickStatuses } from "@/engine/statuses";
 import { filterCompatibleMods, resolveSupports } from "@/engine/supports";
 import { assertNever } from "@/lib/assert-never";
 import { BASE_HAND_SIZE } from "@/lib/constants";
@@ -109,7 +109,7 @@ export const playHand = (state: GameState) => {
       skill: skillCard,
       supports: combat.stagedCards.filter((card) => card !== skillCard) as SupportCard[],
     });
-    const skillOutput = effect(state, [{ kind: "enemy", enemyId: combat.enemy.id }]);
+    const skillOutput = effect(state, [skillCard.target]);
 
     const modifiedSkillOutput = resolveSupports({ skillOutput, mods });
     state = applySkillOutput(state, modifiedSkillOutput);
@@ -182,9 +182,11 @@ export const applySkillOutput = (state: GameState, skillOutput: SkillOutput): Ga
   return produce(state, (draft) => {
     const combat = draft.run.combat!;
     skillOutput.targets.forEach((target) => {
-      if (target.enemyId === combat.enemy.id) {
+      if (target.kind === "enemy" && target.enemyId === combat.enemy.id) {
         combat.enemy = applyStatuses(combat.enemy, skillOutput.statuses);
         combat.enemy = resolveIncomingDamage(combat.enemy, skillOutput.damage);
+      } else if (target.kind === "player") {
+        combat.playerStatuses = mergeStatuses(combat.playerStatuses, skillOutput.statuses);
       }
     });
   });
@@ -205,7 +207,25 @@ export const resolveEnemyTurn = (state: GameState): GameState => {
     combat.enemy = tickStatuses(combat.enemy).enemy;
 
     if (intent.kind === "attack") {
-      draft.run.playerHealth = Math.max(0, draft.run.playerHealth - resolveEnemyAttack(combat.enemy, intent));
+      const attackResult = resolveEnemyAttack(combat.enemy, intent);
+
+      const armorStacks = combat.playerStatuses.find((status) => status.kind === "Armor")?.stacks ?? 0;
+      const absorbed = Math.min(armorStacks, attackResult);
+
+      const armorEntryIndex = combat.playerStatuses.findIndex((status) => status.kind === "Armor");
+      const remainingArmor = armorEntryIndex !== -1 ? combat.playerStatuses[armorEntryIndex].stacks - absorbed : 0;
+
+      if (armorEntryIndex !== -1) {
+        if (remainingArmor <= 0) {
+          combat.playerStatuses.splice(armorEntryIndex, 1);
+        } else {
+          combat.playerStatuses.splice(armorEntryIndex, 1, { kind: "Armor", stacks: armorStacks - absorbed });
+        }
+      }
+
+      const overflow = Math.max(attackResult - absorbed, 0);
+
+      draft.run.playerHealth = Math.max(0, draft.run.playerHealth - overflow);
 
       combat.enemy = resolveIncomingDamage(combat.enemy, getBleedAttackBonus(combat.enemy));
     } else if (intent.kind === "defend") {

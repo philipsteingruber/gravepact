@@ -438,6 +438,37 @@ describe("combatActions", () => {
   });
 
   describe("applySkillOutput", () => {
+    it("applies Armor stacks to playerStatuses when a player-targeted skill is played", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          playerStatuses: [],
+          enemy: createMockEnemy(),
+        };
+      });
+
+      const skillOutput: SkillOutput = { damage: 0, statuses: [{ kind: "Armor", stacks: 5 }], targets: [{ kind: "player" }] };
+      state = applySkillOutput(state, skillOutput);
+
+      expect(state.run.combat?.playerStatuses).toContainEqual({ kind: "Armor", stacks: 5 });
+    });
+
+    it("adds to existing player armor stacks without creating a duplicate entry", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = {
+          ...initialCombatState,
+          playerStatuses: [{ kind: "Armor", stacks: 5 }],
+          enemy: createMockEnemy(),
+        };
+      });
+
+      const skillOutput: SkillOutput = { damage: 0, statuses: [{ kind: "Armor", stacks: 5 }], targets: [{ kind: "player" }] };
+      state = applySkillOutput(state, skillOutput);
+
+      expect(state.run.combat?.playerStatuses).toContainEqual({ kind: "Armor", stacks: 10 });
+      expect(state.run.combat?.playerStatuses.length).toBe(1);
+    });
+
     it("reduces hp by the damage value", () => {
       let state = produce({ ...store.gameState }, (draft) => {
         draft.run.combat = {
@@ -512,6 +543,45 @@ describe("combatActions", () => {
   });
 
   describe("resolveEnemyTurn", () => {
+    it("fully absorbs enemy attack damage when player has enough Armor", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ enemy: createMockEnemy({ intents: [{ kind: "attack", damage: 5 }] }) });
+        draft.run.playerHealth = 10;
+        draft.run.combat.playerStatuses = [{ kind: "Armor", stacks: 5 }];
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.combat?.playerStatuses).toEqual([]);
+      expect(state.run.playerHealth).toBe(10);
+    });
+
+    it("reduces player Armor stacks and applies overflow damage when attack exceeds player Armor", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ enemy: createMockEnemy({ intents: [{ kind: "attack", damage: 8 }] }) });
+        draft.run.playerHealth = 10;
+        draft.run.combat.playerStatuses = [{ kind: "Armor", stacks: 5 }];
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.combat?.playerStatuses).toEqual([]);
+      expect(state.run.playerHealth).toBe(7);
+    });
+
+    it("reduces player Armor stacks without removing the entry when attack damage is less than player Armor", () => {
+      let state = produce({ ...store.gameState }, (draft) => {
+        draft.run.combat = createMockCombatState({ enemy: createMockEnemy({ intents: [{ kind: "attack", damage: 3 }] }) });
+        draft.run.playerHealth = 10;
+        draft.run.combat.playerStatuses = [{ kind: "Armor", stacks: 5 }];
+      });
+
+      state = resolveEnemyTurn(state);
+
+      expect(state.run.combat?.playerStatuses).toEqual([{ kind: "Armor", stacks: 2 }]);
+      expect(state.run.playerHealth).toBe(10);
+    });
+
     it("reduces enemy HP by Burn stack count at start of turn", () => {
       let state = produce({ ...store.gameState }, (draft) => {
         draft.run.combat = {

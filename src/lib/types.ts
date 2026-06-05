@@ -13,7 +13,7 @@ export type StatusEffect = { kind: StatusEffectKind; stacks: number };
 
 // --- Cards ---
 
-export type Target = { kind: "enemy"; enemyId: string };
+export type Target = { kind: "enemy"; enemyId: string } | { kind: "player" };
 
 export type MultiplicativeEffect = { kind: "multiplicative"; multiplier: number };
 export type AdditiveEffect = { kind: "additive"; statusEffect: StatusEffectKind; stacks: number };
@@ -101,6 +101,7 @@ export type CombatState = {
   originalHandOrder: Card[];
   hand: Card[];
   discardPile: Card[];
+  playerStatuses: StatusEffect[];
 };
 export type RunState = {
   deck: Card[];
