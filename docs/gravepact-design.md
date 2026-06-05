@@ -282,7 +282,7 @@ Actions remain pure functions with no dependency on the store itself. The store 
 
 **Card type system:**
 
-`Card` is a discriminated union: `SkillCard | SupportCard | AuraCard`, each with a `kind: "skill" | "support" | "aura"` field. Relics are a separate `Relic` type — never part of `Card` — stored in `run.relics: Relic[]` and never drawn, staged, or discarded. The hand is typed as `Card[]`; engine functions narrow on `kind`. Skill tags are a string union: `type SkillTag = "Attack" | "Spell" | "Curse" | "Block" | "Summon"`.
+`Card` is a discriminated union: `SkillCard | SupportCard | AuraCard`, each with a `kind: "skill" | "support" | "aura"` field. Relics are a separate `Relic` type — never part of `Card` — stored in `run.relics: Relic[]` and never drawn, staged, or discarded. The hand is typed as `Card[]`; engine functions narrow on `kind`. Skill tags are a string union: `type SkillTag = "Attack" | "Spell" | "Curse" | "Block" | "Summon"`. The **Block** tag marks defensive skills that grant Armor to the player. It is the category for Block-compatible supports (e.g. "if you play a Block card, gain 1 extra Armor").
 
 Card effects are stored as `effectId: string` on each card, resolved at runtime via an effect registry in `src/engine/effects.ts`. The registry maps IDs to functions with the signature `(state: GameState, targets: Target[]) => GameState`. This keeps card data files free of logic and makes adding new cards straightforward.
 
@@ -352,8 +352,20 @@ Play Hand is disabled (greyed out, non-interactive) when `stagedCards` contains 
 
 A coastal flats location — drowned revenants, corrosive tide, things washed ashore that shouldn't be. The first location in a run and the source of Phase 1's card and enemy pool.
 
+**Starter deck** (`src/data/cards/starter.ts`):
+
+The generic pre-archetype starting deck. Used by `initialRunState` directly; not part of any location's card pool and never appears in rewards or shops. Replaced in Phase 3 by archetype-specific starter decks.
+
+| Name    | Tag    | Cost | Effect           |
+| ------- | ------ | ---- | ---------------- |
+| Strike  | Attack | 1    | 6 damage         |
+| Fortify | Block  | 1    | Gain 5 Armor     |
+
+Deck composition: 6× Strike + 4× Fortify (10 cards total). Both are Common rarity. Damage and Armor values are flagged for playtesting.
+
 **Data files:**
 
+- `src/data/cards/starter.ts` — starter deck card data objects
 - `src/data/cards/skills.ts` — skill card data objects
 - `src/data/cards/supports.ts` — support card data objects
 - `src/data/enemies.ts` — enemy data objects
@@ -475,5 +487,6 @@ Support modifications (`resolveSupports`) transform a `SkillOutput` before it re
 - Support-on-Aura interaction (future consideration)
 - `changeBehavior` support modification — deferred until multi-enemy model is in place; will modify the `targets` array in `SkillOutput` to include all active enemies
 - `reduceCost` support modification — deferred until inter-turn cost tracking is in place; will reduce `energyCost` of the next skill played after the combo resolves
+- **Armor duration:** Does Armor persist until depleted (current implicit behavior), or should stacks fall off at end of the player's turn? Persistent Armor rewards planning ahead — playing Fortify now to absorb a big hit next turn — but this only works if the player can see upcoming enemy intents in the UI (not just the current one). Turn-limited Armor is simpler to balance and removes the UI dependency, but may make Fortify feel wasteful if the enemy doesn't attack that turn.
 - **Settled: ticks pierce Armor.** DoTs are armor-piercing by design — a reliable bypass for armored enemies. `tickStatuses` correctly bypasses `resolveIncomingDamage`. Covered by a test asserting that an enemy with Armor stacks loses HP from tick damage without Armor stacks depleting.
 - **Settled: over-reservation prevented by `stageCard`.** The `stageCard` guard (`energyReservation > energyRemaining`) prevents staging an aura that would over-reserve. Since `energyRemaining` decrements as each aura is committed, total reservation is naturally capped at `energyMax`. Covered by a test asserting that `stageCard` rejects an aura whose cost exceeds current `energyRemaining`.
